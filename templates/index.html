@@ -19,16 +19,20 @@
         .player-name { font-weight: bold; font-size: 13px; background: rgba(0,0,0,0.7); padding: 3px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); transition: all 0.2s; }
         .player-name.active { border-color: #ffd166; color: #ffd166; box-shadow: 0 0 12px #ffd166; }
 
-        /* JETON DE DEALER (DONNEUR) */
         .dealer-chip { background: #ffd166; color: #111; font-weight: 900; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); border: 1px solid #fff; }
 
-        .bubble { background: #ffd166; color: #111; font-weight: bold; font-size: 13px; padding: 4px 10px; border-radius: 10px; margin-bottom: 4px; box-shadow: 0 3px 6px rgba(0,0,0,0.4); z-index: 10; border: 1px solid #111; }
+        /* BADGE CONTRAT PERMANENT EN HAUT DU TAPIS */
+        .contract-badge { position: absolute; top: 12px; background: rgba(0,0,0,0.85); border: 2px solid #ffd166; padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 10; display: none; align-items: center; gap: 8px; }
+        .contract-badge.coinche { border-color: #e63946; background: rgba(180, 20, 30, 0.9); }
+
+
+        /* BULLE TOUJOURS NETTE AU DESSUS DU NOM */
+        .bubble { background: #ffd166; color: #111; font-weight: bold; font-size: 13px; padding: 4px 10px; border-radius: 10px; margin-bottom: 4px; box-shadow: 0 3px 6px rgba(0,0,0,0.5); z-index: 20; border: 1px solid #000; min-height: 24px; }
 
         #area-north { margin-top: 4px; }
         #area-south { margin-bottom: 4px; }
         .middle-row { display: flex; width: 100%; justify-content: space-between; align-items: center; flex: 1; padding: 0 10px; }
         
-        /* PLI EN CROIX */
         #center-trick { width: 310px; height: 240px; background: rgba(0,0,0,0.2); border-radius: 20px; border: 2px dashed rgba(255,255,255,0.2); position: relative; }
         .trick-card { position: absolute; display: flex; flex-direction: column; align-items: center; }
         .trick-card span { font-size: 10px; margin-top: 2px; background: rgba(0,0,0,0.7); padding: 1px 5px; border-radius: 4px; }
@@ -37,16 +41,15 @@
         .pos-north { top: 8px; left: 50%; transform: translateX(-50%); }
         .pos-west  { left: 10px; top: 50%; transform: translateY(-50%); }
         .pos-east  { right: 10px; top: 50%; transform: translateY(-50%); }
-        .trick-order-badge { position: absolute; top: -8px; left: -8px; background: #2ec4b6; color: #fff; font-size: 11px; font-weight: 900; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); border: 2px solid #1a1e24; z-index: 5; }
-        .trick-order-badge.first { background: #ffd166; color: #111; }
 
         .trick-winner-banner { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); background: #e76f51; color: #fff; font-weight: bold; font-size: 12px; padding: 3px 12px; border-radius: 10px; box-shadow: 0 3px 8px rgba(0,0,0,0.5); white-space: nowrap; z-index: 10; }
 
-        /* REPLAY BAR */
+        .trick-order-badge { position: absolute; top: -7px; right: -7px; background: #2ec4b6; color: #fff; font-size: 11px; font-weight: 900; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); border: 2px solid #1a1e24; z-index: 5; }
+        .trick-order-badge.first { background: #ffd166; color: #111; }
+
         #replay-bar { position: absolute; bottom: 125px; background: rgba(0,0,0,0.9); padding: 6px 14px; border-radius: 20px; display: none; gap: 10px; align-items: center; border: 1px solid #74c69d; z-index: 25; font-size: 13px; }
         #replay-bar button { padding: 4px 10px; font-size: 12px; background: #2ec4b6; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
 
-        /* CARTES */
         .hand { display: flex; gap: 6px; min-height: 50px; }
         .hand-side { display: flex; flex-direction: column; gap: 3px; max-height: 220px; flex-wrap: wrap; }
 
@@ -60,7 +63,6 @@
         .card-center { font-size: 24px; align-self: center; line-height: 1; }
         .card.mini .card-center { font-size: 15px; }
 
-        /* ENCHERES */
         #bid-controls { background: rgba(0,0,0,0.92); padding: 8px 14px; border-radius: 12px; display: flex; gap: 8px; align-items: center; margin-bottom: 6px; border: 1px solid #ffd166; }
         select, button { padding: 7px 12px; font-size: 13px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; }
         button.btn-primary { background: #ffd166; color: #111; }
@@ -68,7 +70,6 @@
         button.btn-danger { background: #e63946; color: #fff; }
         button.btn-danger:disabled { background: #555; cursor: not-allowed; opacity: 0.5; }
 
-        /* PROFESSEUR */
         #professor-panel { width: 440px; background: #111418; border-left: 2px solid #2d6a4f; display: flex; flex-direction: column; padding: 16px; overflow-y: auto; }
         #professor-panel h2 { font-size: 17px; color: #74c69d; margin: 0; }
         
@@ -102,6 +103,8 @@
         <div class="score-bar">
             SCORE : Vous <span><span id="score-nous">0</span></span> — <span><span id="score-eux">0</span></span> Eux (Obj: 1000)
         </div>
+        <!-- BADGE CONTRAT PERMANENT -->
+        <div id="active-contract-badge" class="contract-badge"></div>
 
         <div class="info-bar" id="info-message">Chargement...</div>
 
@@ -123,7 +126,7 @@
             <div class="hand" id="hand-north"></div>
         </div>
 
-        <!-- CENTRE : OUEST, TAPIS, EST -->
+        <!-- CENTRE -->
         <div class="middle-row">
             <div class="player-area" id="area-west">
                 <div id="bubble-1" class="bubble" style="display:none;"></div>
@@ -222,28 +225,52 @@
         }
 
         async function actualiser() {
-            const res = await fetch('/api/etat');
-            etatJeu = await res.json();
+            try {
+                const res = await fetch('/api/etat');
+                etatJeu = await res.json();
+            } catch (err) {
+                console.error("Erreur actualiser:", err);
+                return;
+            }
 
             document.getElementById('score-nous').innerText = etatJeu.scores[0];
             document.getElementById('score-eux').innerText = etatJeu.scores[1];
             document.getElementById('info-message').innerText = etatJeu.message;
 
-            // Jetons de donneur (D)
+            // Donneur (D)
             for (let i = 0; i < 4; i++) {
                 const chip = document.getElementById(`chip-${i}`);
                 if (chip) chip.style.display = (etatJeu.donneur === i) ? 'inline-flex' : 'none';
             }
 
-            // Bulles d'annonces
+            // Bulles : restent toujours affichées dès qu'elles ont du texte
             for (let i = 0; i < 4; i++) {
                 const b = document.getElementById(`bubble-${i}`);
-                if (etatJeu.bulles && etatJeu.bulles[i]) {
+                if (etatJeu.bulles && etatJeu.bulles[i] && etatJeu.bulles[i] !== "") {
                     b.innerText = etatJeu.bulles[i];
                     b.style.display = 'block';
                 } else {
                     b.style.display = 'none';
                 }
+            }
+            // Bandeau de contrat permanent pendant le jeu
+            const contractBadge = document.getElementById('active-contract-badge');
+            if (etatJeu.contrat && (etatJeu.etat === 'jeu' || etatJeu.etat === 'pli_termine')) {
+                const c = etatJeu.contrat;
+                const nomC = c.capot ? 'CAPOT' : c.valeur;
+                const camp = (c.joueur % 2 === 0) ? 'Votre équipe (Nord-Sud)' : 'Adversaires (Est-Ouest)';
+                const isCoinche = Boolean(c.coinche);
+                
+                contractBadge.className = 'contract-badge' + (isCoinche ? ' coinche' : '');
+                contractBadge.innerHTML = `
+                    <span>Atout : <b style="font-size:16px;">${c.atout}</b></span>
+                    <span>|</span>
+                    <span>Contrat : <b style="color:#ffd166;">${nomC}</b> par ${camp}</span>
+                    ${isCoinche ? '<span style="color:#fff; background:#e63946; padding:2px 6px; border-radius:4px; font-size:11px;">COINCHÉ (x2)</span>' : ''}
+                `;
+                contractBadge.style.display = 'flex';
+            } else {
+                contractBadge.style.display = 'none';
             }
 
             // Joueur actif
@@ -252,50 +279,58 @@
                 if (el) el.classList.toggle('active', etatJeu.tour === i && etatJeu.etat !== 'debrief' && etatJeu.etat !== 'pli_termine');
             }
 
-            // Affichage Pli Central et Mains
+            // Main Sud
+            const southHand = document.getElementById('hand-south');
+            southHand.innerHTML = '';
+            etatJeu.main_humain.forEach(([r, c]) => {
+                const isPlayable = etatJeu.jouables.some(([jr, jc]) => jr === r && jc === c);
+                southHand.innerHTML += renderCardHTML(r, c, isPlayable);
+            });
+
+            // Pli central
             if (indexReplayPli === null) {
-                // Jeu normal en direct
                 document.getElementById('hand-north').innerHTML = '';
                 document.getElementById('hand-west').innerHTML = '';
                 document.getElementById('hand-east').innerHTML = '';
-
-                const southHand = document.getElementById('hand-south');
-                southHand.innerHTML = '';
-                etatJeu.main_humain.forEach(([r, c]) => {
-                    const isPlayable = etatJeu.jouables.some(([jr, jc]) => jr === r && jc === c);
-                    southHand.innerHTML += renderCardHTML(r, c, isPlayable);
-                });
-
-                afficherPliSurTapis(etatJeu.pli_en_cours, etatJeu.info_pli_termine);
+                afficherPliSurTapis(etatJeu.pli_en_cours, etatJeu.info_pli_termine, false);
             }
 
-            // Contrôles enchères
+            // Contrôles enchères (sécurisés pour ouverture et surenchère)
             const bidControls = document.getElementById('bid-controls');
             if (etatJeu.etat === 'annonces' && etatJeu.tour === 0) {
                 bidControls.style.display = 'flex';
-                const minVal = etatJeu.contrat ? (etatJeu.contrat.valeur + 10) : 80;
-                const selectVal = document.getElementById('bid-valeur');
                 
+                let minVal = 80;
+                let contratExiste = (etatJeu.contrat && typeof etatJeu.contrat.valeur === 'number');
+                if (contratExiste) {
+                    minVal = etatJeu.contrat.valeur + 10;
+                }
+
+                const selectVal = document.getElementById('bid-valeur');
                 if (selectVal.getAttribute('data-min') !== String(minVal)) {
                     selectVal.setAttribute('data-min', String(minVal));
                     selectVal.innerHTML = '';
                     for (let v = Math.max(minVal, 80); v <= 160; v += 10) {
                         selectVal.innerHTML += `<option value="${v}">${v}</option>`;
                     }
+                    if (minVal <= 250) {
+                        selectVal.innerHTML += `<option value="250">Capot (250)</option>`;
+                    }
                 }
 
                 const btnCoinche = document.getElementById('btn-coinche');
-                const peutCoincher = (etatJeu.contrat && etatJeu.contrat.joueur % 2 !== 0 && !etatJeu.contrat.coinche);
+                const peutCoincher = Boolean(contratExiste && (etatJeu.contrat.joueur % 2 !== 0) && !etatJeu.contrat.coinche);
                 btnCoinche.disabled = !peutCoincher;
             } else {
                 bidControls.style.display = 'none';
             }
 
-            // Historique des enchères
+
+            // Historique
             const bidsHistory = document.getElementById('bids-history');
             bidsHistory.innerHTML = etatJeu.encheres.map(([nom, d]) => `<div><b>${nom}</b> : ${d}</div>`).join('') || 'En attente...';
 
-            // DEBRIEF PROFESSEUR
+            // Debrief
             const sScore = document.getElementById('section-score-donne');
             const sDebriefE = document.getElementById('section-debrief-encheres');
             const sDebriefC = document.getElementById('section-debrief-carte');
@@ -308,6 +343,29 @@
                 sDebriefC.style.display = 'block';
                 btnNext.style.display = 'block';
                 replayBar.style.display = 'flex';
+                                // Détection de fin de match
+                if (etatJeu.match_termine && etatJeu.bilan_match) {
+                    const bm = etatJeu.bilan_match;
+                    document.getElementById('modal-match').style.display = 'flex';
+                    document.getElementById('match-header-icon').innerText = bm.victoire ? '🏆' : '💀';
+                    document.getElementById('match-title').innerText = bm.victoire ? 'VICTOIRE !' : 'DÉFAITE...';
+                    document.getElementById('match-title').style.color = bm.victoire ? '#74c69d' : '#e63946';
+
+                    document.getElementById('match-summary-content').innerHTML = `
+                        <div class="score-row total"><span>Score final :</span> <span>Vous ${bm.score_nous} — ${bm.score_eux} Eux</span></div>
+                        <div class="score-row"><span>Donnes jouées :</span> <b>${bm.donnes} donnes</b></div>
+                        <div class="score-row"><span>Contrats réussis (Vous) :</span> <b>${bm.contrats_nous}</b></div>
+                        <div class="score-row"><span>Contrats réussis (Eux) :</span> <b>${bm.contrats_eux}</b></div>
+                        <div class="score-row"><span>Coinches réussies :</span> <b>${bm.coinches}</b></div>
+                        <hr style="border:0; border-top:1px solid #333; margin:8px 0;">
+                        <div class="score-row" style="color:#74c69d;"><span>Précision aux enchères :</span> <b>${bm.precision_encheres} %</b></div>
+                        <div class="score-row" style="color:#ffd166;"><span>Précision jeu de la carte :</span> <b>${bm.precision_carte} %</b></div>
+                        <div class="score-row" style="color:#2ec4b6;"><span>Appréciation globale IA :</span> <b>${bm.mention}</b></div>
+                        <div class="score-row" style="color:#adb5bd;"><span>Erreurs tactiques nettes :</span> <b>${bm.erreurs}</b></div>
+                    `;
+
+                }
+
 
                 const b = etatJeu.bilan_donne;
                 if (b) {
@@ -354,11 +412,9 @@
                 pliSelectionne = null;
                 indexReplayPli = null;
             }
-
-            gererAvancementBots();
         }
 
-        function afficherPliSurTapis(cartesPli, infoTermine) {
+        function afficherPliSurTapis(cartesPli, infoTermine, isReplay=false) {
             const center = document.getElementById('center-trick');
             center.innerHTML = '';
             const posClasses = ["pos-south", "pos-west", "pos-north", "pos-east"];
@@ -367,8 +423,12 @@
                 const r = carteStr.slice(0, -1);
                 const c = carteStr.slice(-1);
                 const jIndex = ["Vous (Sud)", "Ouest", "Partenaire (Nord)", "Est"].indexOf(nom);
-                const isFirst = (ordreIndex === 0);
-                const orderBadge = `<div class="trick-order-badge ${isFirst ? 'first' : ''}" title="${isFirst ? 'Entame' : ordreIndex+1 + 'e à jouer'}">${ordreIndex + 1}</div>`;
+                
+                let orderBadge = '';
+                if (isReplay) {
+                    const isFirst = (ordreIndex === 0);
+                    orderBadge = `<div class="trick-order-badge ${isFirst ? 'first' : ''}">${ordreIndex + 1}</div>`;
+                }
 
                 center.innerHTML += `
                     <div class="trick-card ${posClasses[jIndex]}">
@@ -386,12 +446,9 @@
             }
         }
 
-
         function afficherMainsAuPli(k) {
-            // k = index du pli (0 à 7)
             if (!etatJeu.mains_depart_toutes || !etatJeu.historique_plis) return;
 
-            // Retrouver les cartes jouées par chaque joueur avant le pli k
             const cartesJoueesParJoueur = [[], [], [], []];
             const noms = ["Vous (Sud)", "Ouest", "Partenaire (Nord)", "Est"];
 
@@ -403,7 +460,6 @@
                 });
             }
 
-            // Calculer les mains restantes à ce moment pour les 4 joueurs
             const containers = ['hand-south', 'hand-west', 'hand-north', 'hand-east'];
             for (let j = 0; j < 4; j++) {
                 const container = document.getElementById(containers[j]);
@@ -411,11 +467,8 @@
                 
                 const mainDepart = etatJeu.mains_depart_toutes[j];
                 const jouees = cartesJoueesParJoueur[j];
-                
-                // Main restante au début de ce pli
                 const restante = mainDepart.filter(c => !jouees.includes(c));
                 
-                // Pour Sud, en grand au pli sélectionné, pour les autres en mini
                 const isMini = (j !== 0);
                 container.innerHTML = restante.map(cStr => {
                     const r = cStr.slice(0, -1);
@@ -425,7 +478,7 @@
             }
         }
 
-         function afficherDetailPli(idx) {
+        function afficherDetailPli(idx) {
             pliSelectionne = idx;
             indexReplayPli = idx;
             const item = etatJeu.debrief_carte[idx];
@@ -435,16 +488,13 @@
             document.querySelectorAll('.trick-btn').forEach((btn, i) => btn.classList.toggle('active', i === idx));
             document.getElementById('replay-num').innerText = idx + 1;
 
-            // 1. Afficher le pli central au centre du tapis
             if (etatJeu.historique_plis && etatJeu.historique_plis[idx]) {
                 const h = etatJeu.historique_plis[idx];
-                afficherPliSurTapis(h.cartes, { gagnant: h.gagnant });
+                afficherPliSurTapis(h.cartes, { gagnant: h.gagnant }, true);
             }
 
-            // 2. Afficher les cartes que chaque joueur avait en main à ce moment précis !
             afficherMainsAuPli(idx);
 
-            // Retrouver l'entameur de ce pli
             let entameInfo = "";
             if (etatJeu.historique_plis && etatJeu.historique_plis[idx]) {
                 const premierDuPli = etatJeu.historique_plis[idx].cartes[0];
@@ -455,7 +505,6 @@
                 `;
             }
 
-            // 3. Panneau de diagnostic
             let html = `
                 <div style="font-weight:bold; font-size:13px; margin-bottom:4px; color:#ffd166;">
                     Pli n°${item.num_pli} : Vous avez joué <b>${item.carte_jouee[0]}${item.carte_jouee[1]}</b> (${item.message})
@@ -484,7 +533,6 @@
             detailCard.innerHTML = html;
         }
 
-
         function changerPliReplay(delta) {
             if (!etatJeu.historique_plis) return;
             let nouv = (indexReplayPli === null ? 0 : indexReplayPli) + delta;
@@ -498,23 +546,37 @@
             actualiser();
         }
 
-        async function gererAvancementBots() {
+        // --- GESTION DU MOTEUR ASYNCHRONE ---
+        async function boucleJeu() {
             if (boucleActive) return;
+
+            // 1. Tour d'un bot aux enchères ou à la carte
             if ((etatJeu.etat === 'annonces' && etatJeu.tour !== 0) || 
-                (etatJeu.etat === 'jeu' && etatJeu.tour !== 0)) {
+                (etatJeu.etat === 'jeu' && etatJeu.tour !== 0 && etatJeu.pli_en_cours.length < 4)) {
+                
+                boucleActive = true;
+                try {
+                    await fetch('/api/step_bot', { method: 'POST' });
+                } catch (e) {
+                    console.error("Erreur step_bot:", e);
+                } finally {
+                    boucleActive = false;
+                    await actualiser();
+                }
+            } 
+            // 2. Le pli est complet : laisser 1.6s d'affichage avant ramassage
+            else if (etatJeu.etat === 'pli_termine') {
                 boucleActive = true;
                 setTimeout(async () => {
-                    await fetch('/api/step_bot', { method: 'POST' });
-                    boucleActive = false;
-                    actualiser();
-                }, 850);
-            } else if (etatJeu.etat === 'pli_termine') {
-                boucleActive = true;
-                setTimeout(async () => {
-                    await fetch('/api/step_bot', { method: 'POST' });
-                    boucleActive = false;
-                    actualiser();
-                }, 1800);
+                    try {
+                        await fetch('/api/step_bot', { method: 'POST' });
+                    } catch (e) {
+                        console.error("Erreur ramassage:", e);
+                    } finally {
+                        boucleActive = false;
+                        await actualiser();
+                    }
+                }, 1600);
             }
         }
 
@@ -524,7 +586,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ choix })
             });
-            actualiser();
+            await actualiser();
         }
 
         function validerEnchere() {
@@ -539,12 +601,15 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ rang, couleur })
             });
-            actualiser();
+            await actualiser();
         }
 
         async function nouvelleDonne() {
+            boucleActive = false;
+            indexReplayPli = null;
+            pliSelectionne = null;
             await fetch('/api/nouvelle_donne', { method: 'POST' });
-            actualiser();
+            await actualiser();
         }
 
         async function exporterDonne() {
@@ -558,11 +623,39 @@
                 setTimeout(() => { btn.innerText = "📋 Exporter"; }, 2500);
             } catch (err) {
                 btn.innerText = "❌ Erreur";
+                console.error(err);
                 setTimeout(() => { btn.innerText = "📋 Exporter"; }, 2500);
             }
         }
 
+        async function rejouerMatch() {
+            document.getElementById('modal-match').style.display = 'none';
+            await fetch('/api/rejouer_match', { method: 'POST' });
+            actualiser();
+        }
+
+
+        // Horloge régulière : vérifie toutes les 800 ms s'il y a une action bot à jouer
+        setInterval(async () => {
+            await actualiser();
+            await boucleJeu();
+        }, 800);
+
         actualiser();
     </script>
+    <!-- MODAL FIN DE MATCH (1000 POINTS) -->
+    <div id="modal-match" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); z-index:200; align-items:center; justify-content:center;">
+        <div class="modal-content" style="max-width:520px; text-align:center; border:2px solid #ffd166; padding:25px;">
+            <div id="match-header-icon" style="font-size:50px; margin-bottom:10px;">🏆</div>
+            <h2 id="match-title" style="color:#ffd166; font-size:24px; margin-bottom:15px;">Victoire !</h2>
+            
+            <div class="score-summary-box" id="match-summary-content" style="text-align:left; line-height:1.8; margin-bottom:20px; background:#111418; font-size:14px;"></div>
+            
+            <button onclick="rejouerMatch()" style="width:100%; padding:14px; font-size:16px; background:#ffd166; color:#111; font-weight:bold; border:none; border-radius:8px; cursor:pointer;">
+                🔄 Rejouer une partie
+            </button>
+        </div>
+    </div>
+
 </body>
 </html>
