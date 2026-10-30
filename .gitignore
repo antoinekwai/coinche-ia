@@ -1,0 +1,12 @@
+# Fichiers lourds de calcul
+donnees.npy
+imitation/
+imitation_encheres/
+resultats/
+*.npz
+
+# Fichiers temporaires Python et Mac
+__pycache__/
+*.pyc
+.DS_Store
+*.tmp
