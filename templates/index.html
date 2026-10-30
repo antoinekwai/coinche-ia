@@ -15,11 +15,11 @@
         .info-bar { position: absolute; top: 15px; right: 20px; background: rgba(0,0,0,0.65); padding: 8px 16px; border-radius: 8px; font-size: 13px; max-width: 440px; text-align: right; border: 1px solid rgba(255,255,255,0.2); }
 
         .player-area { display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2; position: relative; }
-        .player-name { font-weight: bold; font-size: 13px; background: rgba(0,0,0,0.7); padding: 4px 12px; border-radius: 12px; margin-bottom: 5px; border: 1px solid rgba(255,255,255,0.2); }
+        .player-name { font-weight: bold; font-size: 13px; background: rgba(0,0,0,0.7); padding: 4px 12px; border-radius: 12px; margin-bottom: 5px; border: 1px solid rgba(255,255,255,0.2); transition: all 0.2s; }
         .player-name.active { border-color: #ffd166; color: #ffd166; box-shadow: 0 0 12px #ffd166; }
 
-        .bubble { background: #ffd166; color: #111; font-weight: bold; font-size: 13px; padding: 4px 10px; border-radius: 10px; margin-bottom: 5px; box-shadow: 0 3px 6px rgba(0,0,0,0.4); animation: pop 0.2s ease-out; }
-        @keyframes pop { 0% { transform: scale(0.5); } 100% { transform: scale(1); } }
+        /* BULLES VISIBLES */
+        .bubble { background: #ffd166; color: #111; font-weight: bold; font-size: 13px; padding: 4px 10px; border-radius: 10px; margin-bottom: 5px; box-shadow: 0 3px 6px rgba(0,0,0,0.4); z-index: 10; border: 1px solid #111; }
 
         #area-north { margin-top: 5px; }
         #area-south { margin-bottom: 5px; }
@@ -37,6 +37,9 @@
 
         .trick-winner-banner { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); background: #e76f51; color: #fff; font-weight: bold; font-size: 12px; padding: 4px 14px; border-radius: 10px; box-shadow: 0 3px 8px rgba(0,0,0,0.5); white-space: nowrap; z-index: 10; }
 
+        #replay-bar { position: absolute; bottom: 120px; background: rgba(0,0,0,0.85); padding: 8px 16px; border-radius: 20px; display: none; gap: 12px; align-items: center; border: 1px solid #74c69d; z-index: 20; }
+        #replay-bar button { padding: 4px 10px; font-size: 12px; background: #2ec4b6; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+
         /* CARTES */
         .hand { display: flex; gap: 8px; }
         .card { width: 64px; height: 95px; background: #fff; color: #111; border-radius: 6px; display: flex; flex-direction: column; justify-content: space-between; padding: 5px; font-weight: bold; font-size: 17px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); user-select: none; }
@@ -50,25 +53,24 @@
         .card.mini .card-center { font-size: 18px; }
 
         /* ENCHERES */
-        #bid-controls { background: rgba(0,0,0,0.9); padding: 10px 16px; border-radius: 12px; display: flex; gap: 10px; align-items: center; margin-bottom: 8px; border: 1px solid #ffd166; }
+        #bid-controls { background: rgba(0,0,0,0.92); padding: 10px 16px; border-radius: 12px; display: flex; gap: 10px; align-items: center; margin-bottom: 8px; border: 1px solid #ffd166; }
         select, button { padding: 8px 14px; font-size: 13px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; }
         button.btn-primary { background: #ffd166; color: #111; }
         button.btn-secondary { background: #495057; color: #fff; }
         button.btn-danger { background: #e63946; color: #fff; }
+        button.btn-danger:disabled { background: #555; cursor: not-allowed; opacity: 0.5; }
 
         /* PROFESSEUR */
-        #professor-panel { width: 420px; background: #111418; border-left: 2px solid #2d6a4f; display: flex; flex-direction: column; padding: 18px; overflow-y: auto; }
-        #professor-panel h2 { font-size: 18px; color: #74c69d; margin-bottom: 12px; border-bottom: 1px solid #333; padding-bottom: 6px; }
+        #professor-panel { width: 440px; background: #111418; border-left: 2px solid #2d6a4f; display: flex; flex-direction: column; padding: 18px; overflow-y: auto; }
+        #professor-panel h2 { font-size: 17px; color: #74c69d; margin: 0; }
         
         .debrief-section { margin-bottom: 16px; }
         .debrief-section h3 { font-size: 12px; color: #adb5bd; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        /* TABLEAU SCORE FIN DE DONNE */
         .score-summary-box { background: #1f242d; border-radius: 8px; padding: 12px; border: 1px solid #3a86ff; margin-bottom: 15px; font-size: 13px; }
         .score-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
         .score-row.total { border-top: 1px solid #444; margin-top: 6px; padding-top: 6px; font-weight: bold; font-size: 14px; color: #ffd166; }
 
-        /* LISTE DES PLIS CLIQUABLES */
         .tricks-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
         .trick-btn { background: #1e232a; border: 1px solid #444; color: #fff; border-radius: 6px; padding: 8px 4px; font-size: 12px; cursor: pointer; text-align: center; }
         .trick-btn:hover, .trick-btn.active { border-color: #ffd166; background: #2a313b; }
@@ -79,14 +81,17 @@
         .badge.red { color: #e71d36; }
         .badge.grey { color: #6c757d; }
 
-        /* DETAIL DU COUP SELECTIONNE */
         #trick-detail-card { background: #1c2128; border-radius: 8px; padding: 12px; border: 1px solid #ffd166; margin-bottom: 15px; font-size: 13px; }
         .detail-hand { display: flex; gap: 4px; margin: 8px 0; overflow-x: auto; padding-bottom: 4px; }
         .options-table { width: 100%; font-size: 12px; border-collapse: collapse; margin-top: 8px; }
-        .options-table td { padding: 4px 6px; border-bottom: 1px solid #2d333b; }
+        .options-table td, .options-table th { padding: 4px 6px; border-bottom: 1px solid #2d333b; text-align: left; }
 
         .btn-next-donne { width: 100%; padding: 14px; font-size: 15px; background: #2ec4b6; color: #fff; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; margin-top: auto; }
-        .btn-next-donne:hover { background: #20a396; }
+
+        #modal-hands { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; }
+        .modal-content { background: #1a1e24; border: 2px solid #74c69d; border-radius: 12px; padding: 20px; max-width: 650px; width: 90%; }
+        .modal-row { margin-bottom: 12px; }
+        .modal-row-title { font-size: 13px; font-weight: bold; color: #ffd166; margin-bottom: 4px; }
     </style>
 </head>
 <body>
@@ -97,6 +102,13 @@
         </div>
 
         <div class="info-bar" id="info-message">Chargement...</div>
+
+        <div id="replay-bar">
+            <span>Revue du pli : <b id="replay-num">1</b>/8</span>
+            <button onclick="changerPliReplay(-1)">◀ Précédent</button>
+            <button onclick="changerPliReplay(1)">Suivant ▶</button>
+            <button style="background:#495057;" onclick="quitterReplay()">Fermer revue</button>
+        </div>
 
         <!-- NORD -->
         <div class="player-area" id="area-north">
@@ -125,16 +137,12 @@
             
             <div id="bid-controls" style="display: none;">
                 <button class="btn-secondary" onclick="actionEnchere('passe')">Passe</button>
-                <select id="bid-valeur">
-                    <option value="80">80</option><option value="90">90</option><option value="100">100</option>
-                    <option value="110">110</option><option value="120">120</option><option value="130">130</option>
-                    <option value="140">140</option><option value="150">150</option><option value="160">160</option>
-                </select>
+                <select id="bid-valeur"></select>
                 <select id="bid-couleur">
                     <option value="♠">♠ Pique</option><option value="♥">♥ Cœur</option>
                     <option value="♦">♦ Carreau</option><option value="♣">♣ Trèfle</option>
                 </select>
-                <button class="btn-primary" onclick="actionEnchere([document.getElementById('bid-valeur').value, document.getElementById('bid-couleur').value])">Annoncer</button>
+                <button class="btn-primary" onclick="validerEnchere()">Annoncer</button>
                 <button class="btn-danger" id="btn-coinche" onclick="actionEnchere('coinche')">Coincher !</button>
             </div>
 
@@ -145,30 +153,31 @@
 
     <!-- PROFESSEUR -->
     <div id="professor-panel">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #333; padding-bottom: 6px;">
-            <h2 style="margin: 0; border: none; padding: 0;">🎓 Mode Professeur</h2>
-            <button id="btn-export" onclick="exporterDonne()" style="background: #2a313b; color: #74c69d; border: 1px solid #74c69d; padding: 4px 10px; font-size: 11px; border-radius: 6px; cursor: pointer;">
-                📋 Exporter
-            </button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid #333; padding-bottom:6px;">
+            <h2>🎓 Mode Professeur</h2>
+            <div style="display:flex; gap:6px;">
+                <button id="btn-see-hands" onclick="ouvrirModalMains()" style="display:none; background:#2a313b; color:#ffd166; border:1px solid #ffd166; padding:4px 8px; font-size:11px; border-radius:6px; cursor:pointer;">
+                    👁️ 4 Mains
+                </button>
+                <button id="btn-export" onclick="exporterDonne()" style="background:#2a313b; color:#74c69d; border:1px solid #74c69d; padding:4px 8px; font-size:11px; border-radius:6px; cursor:pointer;">
+                    📋 Exporter
+                </button>
+            </div>
         </div>
-
         
-        <!-- RÉSUMÉ POINTS FIN DE DONNE -->
         <div id="section-score-donne" style="display:none;">
             <h3>Bilan de la donne</h3>
             <div class="score-summary-box" id="box-score-summary"></div>
         </div>
 
         <div class="debrief-section" id="section-debrief-encheres" style="display:none;">
-            <h3>Analyse des enchères</h3>
+            <h3>Analyse des enchères (Monte Carlo)</h3>
             <div id="feedback-encheres" style="font-size:13px; line-height:1.5;"></div>
         </div>
 
         <div class="debrief-section" id="section-debrief-carte" style="display:none;">
             <h3>Analyse du jeu de la carte (8 plis)</h3>
             <div class="tricks-grid" id="tricks-grid"></div>
-            
-            <!-- Détail interactif du pli cliqué -->
             <div id="trick-detail-card" style="display:none;"></div>
         </div>
 
@@ -180,10 +189,22 @@
         <button class="btn-next-donne" id="btn-nouvelle-donne" style="display:none;" onclick="nouvelleDonne()">Donne Suivante ➔</button>
     </div>
 
+    <!-- MODAL 4 MAINS -->
+    <div id="modal-hands" onclick="fermerModalMains()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+                <h3 style="color:#74c69d;">Cartes de départ des 4 joueurs</h3>
+                <button onclick="fermerModalMains()" style="background:none; border:none; color:#fff; font-size:16px; cursor:pointer;">✖</button>
+            </div>
+            <div id="modal-hands-body"></div>
+        </div>
+    </div>
+
     <script>
         let etatJeu = {};
         let boucleActive = false;
         let pliSelectionne = null;
+        let indexReplayPli = null;
 
         function renderCardHTML(r, c, playable=false, mini=false) {
             const isRed = (c === '♥' || c === '♦') ? 'red' : '';
@@ -206,10 +227,10 @@
             document.getElementById('score-eux').innerText = etatJeu.scores[1];
             document.getElementById('info-message').innerText = etatJeu.message;
 
-            // Bulles
+            // Bulles d'annonces
             for (let i = 0; i < 4; i++) {
                 const b = document.getElementById(`bubble-${i}`);
-                if (etatJeu.bulles[i]) {
+                if (etatJeu.bulles && etatJeu.bulles[i]) {
                     b.innerText = etatJeu.bulles[i];
                     b.style.display = 'block';
                 } else {
@@ -231,53 +252,64 @@
                 southHand.innerHTML += renderCardHTML(r, c, isPlayable);
             });
 
-            // Pli central
-            const center = document.getElementById('center-trick');
-            center.innerHTML = '';
-            const posClasses = ["pos-south", "pos-west", "pos-north", "pos-east"];
-            
-            etatJeu.pli_en_cours.forEach(([nom, carteStr]) => {
-                const r = carteStr.slice(0, -1);
-                const c = carteStr.slice(-1);
-                const jIndex = ["Vous (Sud)", "Ouest", "Partenaire (Nord)", "Est"].indexOf(nom);
-                center.innerHTML += `
-                    <div class="trick-card ${posClasses[jIndex]}">
-                        ${renderCardHTML(r, c)}
-                        <span>${nom}</span>
-                    </div>
-                `;
-            });
-
-            if (etatJeu.info_pli_termine) {
-                center.innerHTML += `<div class="trick-winner-banner">🏆 Pli pour ${etatJeu.info_pli_termine.nom_gagnant} (+${etatJeu.info_pli_termine.pts} pts)</div>`;
+            // Pli Central
+            if (indexReplayPli === null) {
+                afficherPliSurTapis(etatJeu.pli_en_cours, etatJeu.info_pli_termine);
             }
 
-            // Enchères
+            // Contrôles enchères
             const bidControls = document.getElementById('bid-controls');
-            bidControls.style.display = (etatJeu.etat === 'annonces' && etatJeu.tour === 0) ? 'flex' : 'none';
+            if (etatJeu.etat === 'annonces' && etatJeu.tour === 0) {
+                bidControls.style.display = 'flex';
+                
+                // Mettre à jour les paliers légaux autorisés
+                const minVal = etatJeu.contrat ? (etatJeu.contrat.valeur + 10) : 80;
+                const selectVal = document.getElementById('bid-valeur');
+                
+                // Ne reconstruire que si les options changent pour ne pas réinitialiser la sélection
+                if (selectVal.getAttribute('data-min') !== String(minVal)) {
+                    selectVal.setAttribute('data-min', String(minVal));
+                    selectVal.innerHTML = '';
+                    for (let v = Math.max(minVal, 80); v <= 160; v += 10) {
+                        selectVal.innerHTML += `<option value="${v}">${v}</option>`;
+                    }
+                }
 
+                // Bouton coinche actif uniquement si contrat adverse
+                const btnCoinche = document.getElementById('btn-coinche');
+                const peutCoincher = (etatJeu.contrat && etatJeu.contrat.joueur % 2 !== 0 && !etatJeu.contrat.coinche);
+                btnCoinche.disabled = !peutCoincher;
+
+            } else {
+                bidControls.style.display = 'none';
+            }
+
+            // Historique des enchères
             const bidsHistory = document.getElementById('bids-history');
             bidsHistory.innerHTML = etatJeu.encheres.map(([nom, d]) => `<div><b>${nom}</b> : ${d}</div>`).join('') || 'En attente...';
 
-            // DEBRIEF PROFESSEUR
+            // DEBRIEF
             const sScore = document.getElementById('section-score-donne');
             const sDebriefE = document.getElementById('section-debrief-encheres');
             const sDebriefC = document.getElementById('section-debrief-carte');
             const btnNext = document.getElementById('btn-nouvelle-donne');
+            const btnSeeHands = document.getElementById('btn-see-hands');
+            const replayBar = document.getElementById('replay-bar');
 
             if (etatJeu.etat === 'debrief') {
                 sScore.style.display = 'block';
                 sDebriefE.style.display = 'block';
                 sDebriefC.style.display = 'block';
                 btnNext.style.display = 'block';
+                btnSeeHands.style.display = 'block';
+                replayBar.style.display = 'flex';
 
-                // Bilan des points
                 const b = etatJeu.bilan_donne;
                 if (b) {
                     document.getElementById('box-score-summary').innerHTML = `
                         <div class="score-row"><span>Contrat :</span> <b>${b.contrat_nom} par ${b.preneur}</b></div>
                         <div class="score-row"><span>Points faits :</span> <b>Vous ${b.pts_nous} — ${b.pts_eux} Eux</b></div>
-                        <div class="score-row"><span>Plis remportés :</span> <span>Vous ${b.plis_nous} — ${b.plis_eux} Eux</span></div>
+                        <div class="score-row"><span>Plis faits :</span> <span>Vous ${b.plis_nous} — ${b.plis_eux} Eux</span></div>
                         <div class="score-row"><span>Belote :</span> <span>${b.belote}</span></div>
                         <div class="score-row total">
                             <span>Marque :</span> 
@@ -286,14 +318,11 @@
                     `;
                 }
 
-                // Débrief enchères
                 document.getElementById('feedback-encheres').innerHTML = etatJeu.debrief_encheres.map(txt => {
                     if (txt === "---") return '<hr style="border:0; border-top:1px solid #333; margin:8px 0;">';
                     return `<div style="margin-bottom:5px;">${txt.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')}</div>`;
                 }).join('');
 
-
-                // Grille des 8 plis cliquables
                 const grid = document.getElementById('tricks-grid');
                 grid.innerHTML = '';
                 etatJeu.debrief_carte.forEach((item, idx) => {
@@ -316,20 +345,51 @@
                 sDebriefE.style.display = 'none';
                 sDebriefC.style.display = 'none';
                 btnNext.style.display = 'none';
+                btnSeeHands.style.display = 'none';
+                replayBar.style.display = 'none';
                 pliSelectionne = null;
+                indexReplayPli = null;
             }
 
             gererAvancementBots();
         }
 
+        function afficherPliSurTapis(cartesPli, infoTermine) {
+            const center = document.getElementById('center-trick');
+            center.innerHTML = '';
+            const posClasses = ["pos-south", "pos-west", "pos-north", "pos-east"];
+            
+            cartesPli.forEach(([nom, carteStr]) => {
+                const r = carteStr.slice(0, -1);
+                const c = carteStr.slice(-1);
+                const jIndex = ["Vous (Sud)", "Ouest", "Partenaire (Nord)", "Est"].indexOf(nom);
+                center.innerHTML += `
+                    <div class="trick-card ${posClasses[jIndex]}">
+                        ${renderCardHTML(r, c)}
+                        <span>${nom}</span>
+                    </div>
+                `;
+            });
+
+            if (infoTermine) {
+                center.innerHTML += `<div class="trick-winner-banner">🏆 Pli pour ${infoTermine.nom_gagnant || infoTermine.gagnant}</div>`;
+            }
+        }
+
         function afficherDetailPli(idx) {
             pliSelectionne = idx;
+            indexReplayPli = idx;
             const item = etatJeu.debrief_carte[idx];
             const detailCard = document.getElementById('trick-detail-card');
             detailCard.style.display = 'block';
 
-            // Mettre en surbrillance le bouton actif
             document.querySelectorAll('.trick-btn').forEach((btn, i) => btn.classList.toggle('active', i === idx));
+            document.getElementById('replay-num').innerText = idx + 1;
+
+            if (etatJeu.historique_plis && etatJeu.historique_plis[idx]) {
+                const h = etatJeu.historique_plis[idx];
+                afficherPliSurTapis(h.cartes, { gagnant: h.gagnant });
+            }
 
             let html = `
                 <div style="font-weight:bold; font-size:14px; margin-bottom:6px; color:#ffd166;">
@@ -339,25 +399,14 @@
                 <div class="detail-hand">
                     ${item.main_moment.map(([r, c]) => renderCardHTML(r, c, false, true)).join('')}
                 </div>
-            `;
-
-            if (item.pli_moment && item.pli_moment.length > 0) {
-                html += `
-                    <div style="font-size:12px; color:#adb5bd; margin: 6px 0 4px 0;">Cartes déjà posées sur ce pli :</div>
-                    <div style="font-size:12px; margin-bottom:8px;">${item.pli_moment.map(([j, c]) => `<b>${j}</b>: ${c}`).join('  |  ')}</div>
-                `;
-            } else {
-                html += `<div style="font-size:12px; color:#adb5bd; margin-bottom:8px;">Vous étiez à l'entame de ce pli.</div>`;
-            }
-
-            html += `
                 <div style="font-size:13px; line-height:1.4; background:#111418; padding:8px; border-radius:6px; margin: 8px 0; border-left:3px solid #ffd166;">
-                    💡 <b>Analyse tactique :</b> ${item.explication}
+                    💡 <b>Diagnostic :</b> ${item.explication}
                 </div>
             `;
+
             if (!item.est_force && item.options) {
                 html += `
-                    <div style="font-size:12px; color:#adb5bd; margin-top:8px;">Évaluation Monte Carlo (donnes compatibles enchères) :</div>
+                    <div style="font-size:12px; color:#adb5bd; margin-top:8px;">Évaluation Monte Carlo (donnes réelles compatibles) :</div>
                     <table class="options-table">
                         <tr><th>Carte</th><th>Chances contrat</th><th>Total estimé</th><th>Verdict</th></tr>
                         ${item.options.map(opt => `
@@ -371,10 +420,43 @@
                     </table>
                 `;
             }
-
-
-
             detailCard.innerHTML = html;
+        }
+
+        function changerPliReplay(delta) {
+            if (!etatJeu.historique_plis) return;
+            let nouv = (indexReplayPli === null ? 0 : indexReplayPli) + delta;
+            if (nouv >= 0 && nouv < etatJeu.historique_plis.length) {
+                afficherDetailPli(nouv);
+            }
+        }
+
+        function quitterReplay() {
+            indexReplayPli = null;
+            actualiser();
+        }
+
+        function ouvrirModalMains() {
+            const modal = document.getElementById('modal-hands');
+            const body = document.getElementById('modal-hands-body');
+            body.innerHTML = '';
+            const noms = ["Vous (Sud)", "Ouest", "Partenaire (Nord)", "Est"];
+            
+            etatJeu.mains_depart_toutes.forEach((m, idx) => {
+                body.innerHTML += `
+                    <div class="modal-row">
+                        <div class="modal-row-title">${noms[idx]}</div>
+                        <div class="detail-hand">
+                            ${m.map(cStr => renderCardHTML(cStr.slice(0,-1), cStr.slice(-1), false, true)).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            modal.style.display = 'flex';
+        }
+
+        function fermerModalMains() {
+            document.getElementById('modal-hands').style.display = 'none';
         }
 
         async function gererAvancementBots() {
@@ -406,6 +488,12 @@
             actualiser();
         }
 
+        function validerEnchere() {
+            const val = document.getElementById('bid-valeur').value;
+            const coul = document.getElementById('bid-couleur').value;
+            actionEnchere([val, coul]);
+        }
+
         async function jouerCarte(rang, couleur) {
             await fetch('/api/jouer_carte', {
                 method: 'POST',
@@ -419,6 +507,7 @@
             await fetch('/api/nouvelle_donne', { method: 'POST' });
             actualiser();
         }
+
         async function exporterDonne() {
             const btn = document.getElementById('btn-export');
             btn.innerText = "⏳ Copie...";

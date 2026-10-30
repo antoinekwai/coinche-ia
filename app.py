@@ -13,7 +13,7 @@ PARTIE = {
     "etat": "annonces",      # "annonces", "jeu", "pli_termine", "debrief"
     "mains": [[], [], [], []],
     "main_initiale_humain": [],
-    "mains_initiales_toutes": [[], [], [], []],   # <--- AJOUTER CETTE LIGNE
+    "mains_initiales_toutes": [[], [], [], []],
     "contrat": None,
     "encheres": [],
     "tour": 1,
@@ -22,7 +22,7 @@ PARTIE = {
     "plis_faits": [0, 0],
     "pts_cartes": [0, 0],
     "belote_equipe": None,
-    "bilan_donne": None,     # Résumé complet des points de la donne
+    "bilan_donne": None,
     "debrief_carte": [],
     "debrief_encheres": [],
     "dernier_pli": None,
@@ -79,7 +79,12 @@ def traiter_decision_enchere(joueur, dec):
     if isinstance(dec, tuple):
         val, coul = dec
         capot = regles["capot_autorise"] and val == regles["valeur_capot"]
-        PARTIE["contrat"] = {"valeur": val, "atout": coul, "joueur": joueur, "coinche": 0, "capot": capot}
+        declarant = joueur
+        if PARTIE["contrat"] and PARTIE["contrat"]["atout"] == coul:
+            if PARTIE["contrat"]["joueur"] % 2 == joueur % 2:
+                declarant = PARTIE["contrat"]["joueur"]
+
+        PARTIE["contrat"] = {"valeur": val, "atout": coul, "joueur": declarant, "dernier_encherisseur": joueur, "coinche": 0, "capot": capot}
         PARTIE["encheres"].append((joueur, dec))
         PARTIE["bulles"][joueur] = f"{'CAPOT' if capot else val} {coul}"
         PARTIE["message"] = f"{nom_joueur(joueur)} annonce {val} {coul}."
@@ -176,7 +181,6 @@ def cloturer_donne():
     PARTIE["scores"][1] += marque[1]
     PARTIE["etat"] = "debrief"
     
-    # Rapport complet des points
     PARTIE["bilan_donne"] = {
         "pts_nous": PARTIE["pts_cartes"][0],
         "pts_eux": PARTIE["pts_cartes"][1],
@@ -210,16 +214,29 @@ def get_etat():
     if PARTIE["etat"] == "jeu" and PARTIE["tour"] == 0:
         jouables = cartes_jouables(PARTIE["mains"][0], PARTIE["pli_en_cours"], atout, 0, regles)
     
+    h_plis = []
+    for p_idx in range(len(PARTIE["historique"]) // 4):
+        pli_k = PARTIE["historique"][4*p_idx : 4*p_idx+4]
+        gagnant, c_gag = gagnant_pli(pli_k, atout)
+        h_plis.append({
+            "num": p_idx + 1,
+            "cartes": [(nom_joueur(j), f"{c[0]}{c[1]}") for j, c in pli_k],
+            "gagnant": nom_joueur(gagnant),
+            "carte_gagnante": f"{c_gag[0]}{c_gag[1]}"
+        })
+
     return jsonify({
         "etat": PARTIE["etat"],
         "scores": PARTIE["scores"],
         "main_humain": trier_main(PARTIE["mains"][0]),
+        "mains_depart_toutes": [[f"{r}{c}" for r, c in trier_main(m)] for m in PARTIE["mains_initiales_toutes"]],
         "jouables": jouables,
         "tour": PARTIE["tour"],
         "nom_tour": nom_joueur(PARTIE["tour"]),
         "contrat": PARTIE["contrat"],
         "encheres": [(nom_joueur(j), d if isinstance(d, str) else f"{d[0]} {d[1]}") for j, d in PARTIE["encheres"]],
         "pli_en_cours": [(nom_joueur(j), f"{c[0]}{c[1]}") for j, c in PARTIE["pli_en_cours"]],
+        "historique_plis": h_plis,
         "message": PARTIE["message"],
         "bulles": PARTIE["bulles"],
         "info_pli_termine": PARTIE["info_pli_termine"],
@@ -242,10 +259,17 @@ def step_bot():
 def action_enchere():
     if PARTIE["etat"] != "annonces" or PARTIE["tour"] != 0:
         return jsonify({"erreur": "Ce n'est pas votre tour"}), 400
+    
     data = request.json
     choix = data.get("choix")
+    
     if isinstance(choix, list):
-        choix = (int(choix[0]), choix[1])
+        val = int(choix[0])
+        # SÉCURITÉ : L'enchère doit obligatoirement dépasser le contrat en cours
+        if PARTIE["contrat"] and val <= PARTIE["contrat"]["valeur"]:
+            return jsonify({"erreur": "Enchère insuffisante"}), 400
+        choix = (val, choix[1])
+        
     traiter_decision_enchere(0, choix)
     return jsonify({"succes": True})
 
@@ -288,7 +312,6 @@ def route_nouvelle_donne():
 
 @app.route("/api/export_donne")
 def route_export_donne():
-    """Génère un rapport texte complet de la donne pour analyse et débug."""
     if not PARTIE["mains_initiales_toutes"][0]:
         return jsonify({"texte": "Aucune donne enregistrée."})
 
@@ -297,55 +320,42 @@ def route_export_donne():
     lignes.append("RAPPORT D'ANALYSE DE DONNE — COINCHE IA")
     lignes.append("=" * 60)
 
-    # 1. Contexte général
     lignes.append(f"\nDonneur : {nom_joueur(PARTIE['donneur'])}")
     if PARTIE["contrat"]:
         c = PARTIE["contrat"]
         coinche_str = ["Non coinché", "COINCHÉ (x2)", "SURCOINCHÉ (x3)"][c.get("coinche", 0)]
         lignes.append(f"Contrat final : {c['valeur']} {c['atout']} par {nom_joueur(c['joueur'])} — {coinche_str}")
-        if c.get("capot"):
-            lignes.append("Option Capot : OUI")
     else:
         lignes.append("Contrat final : Aucun (passe générale)")
 
-    # 2. Enchères complètes
     lignes.append("\n--- DÉROULEMENT DES ENCHÈRES ---")
     for j, d in PARTIE["encheres"]:
         nom_j = nom_joueur(j)
         action = f"{d[0]} {d[1]}" if isinstance(d, tuple) else str(d).upper()
         lignes.append(f"  {nom_j:18} : {action}")
 
-    # 3. Les 4 mains initiales
     lignes.append("\n--- MAINS DE DÉPART (cartes triées) ---")
     for p in range(4):
         cartes_str = " ".join(f"{r}{c}" for r, c in trier_main(PARTIE["mains_initiales_toutes"][p]))
         lignes.append(f"  {nom_joueur(p):18} : {cartes_str}")
 
-    # 4. Film des plis (si joués)
     if PARTIE["historique"]:
         lignes.append("\n--- DÉROULEMENT DU JEU DE LA CARTE ---")
         atout = PARTIE["contrat"]["atout"] if PARTIE["contrat"] else "♠"
         regles = REGLES_STANDARD
-        
         for num_pli in range(1, 9):
             idx_deb = (num_pli - 1) * 4
             idx_fin = num_pli * 4
-            if idx_deb >= len(PARTIE["historique"]):
-                break
+            if idx_deb >= len(PARTIE["historique"]): break
             cartes_pli = PARTIE["historique"][idx_deb:idx_fin]
             detail_pli = "  ".join(f"{nom_joueur(j)}:{r}{c}" for j, (r, c) in cartes_pli)
-            
             if len(cartes_pli) == 4:
                 gagnant, c_gagnante = gagnant_pli(cartes_pli, atout)
                 pts = sum(points(c, atout) for _, c in cartes_pli)
-                if num_pli == 8:
-                    pts += regles["dix_de_der"]
+                if num_pli == 8: pts += regles["dix_de_der"]
                 lignes.append(f"  Pli {num_pli} : {detail_pli}")
                 lignes.append(f"         ==> Remporté par {nom_joueur(gagnant)} avec {c_gagnante[0]}{c_gagnante[1]} (+{pts} pts)")
-            else:
-                lignes.append(f"  Pli {num_pli} (incomplet) : {detail_pli}")
 
-    # 5. Bilan des points
     b = PARTIE["bilan_donne"]
     if b:
         lignes.append("\n--- BILAN DE LA DONNE ---")
@@ -357,7 +367,6 @@ def route_export_donne():
         lignes.append(f"  Marque donne  : Vous +{b['marque_nous']} | Eux +{b['marque_eux']}")
         lignes.append(f"  SCORE TOTAL   : Vous {PARTIE['scores'][0]} — {PARTIE['scores'][1]} Eux")
 
-    # 6. Débriefing du professeur
     if PARTIE["debrief_encheres"]:
         lignes.append("\n--- ANALYSE PROFESSEUR : ENCHÈRES ---")
         for txt in PARTIE["debrief_encheres"]:
@@ -376,6 +385,6 @@ def route_export_donne():
     lignes.append("\n" + "=" * 60)
     return jsonify({"texte": "\n".join(lignes)})
 
-
+port = int(os.environ.get("PORT", 5001))
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001, debug=False)
+    app.run(host="0.0.0.0", port=port, debug=False)
