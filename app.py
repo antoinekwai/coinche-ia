@@ -228,6 +228,7 @@ def get_etat():
     return jsonify({
         "etat": PARTIE["etat"],
         "scores": PARTIE["scores"],
+        "donneur": PARTIE["donneur"], 
         "main_humain": trier_main(PARTIE["mains"][0]),
         "mains_depart_toutes": [[f"{r}{c}" for r, c in trier_main(m)] for m in PARTIE["mains_initiales_toutes"]],
         "jouables": jouables,
