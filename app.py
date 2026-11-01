@@ -141,6 +141,7 @@ def terminer_encheres():
     PARTIE["belote_equipe"] = equipe_belote(PARTIE["mains"], atout)
     PARTIE["joueur_belote"] = joueur_avec_belote(PARTIE["mains"], atout)
     PARTIE["belote_etape"] = 0
+    PARTIE["bulles"] = ["", "", "", ""]
     PARTIE["tour"] = (PARTIE["donneur"] + 1) % 4
     c_nom = "CAPOT" if PARTIE["contrat"]["capot"] else PARTIE["contrat"]["valeur"]
     coinche_txt = " (COINCHÉ)" if PARTIE["contrat"]["coinche"] else ""
@@ -328,7 +329,7 @@ def get_etat():
         "etat": PARTIE["etat"],
         "donneur": PARTIE["donneur"],
         "scores": PARTIE["scores"],
-        "main_humain": trier_main(PARTIE["mains"][0]),
+        "main_humain": trier_main(PARTIE["mains"][0], PARTIE["contrat"]["atout"] if PARTIE["contrat"] else None),
         "mains_depart_toutes": [[f"{r}{c}" for r, c in trier_main(m)] for m in PARTIE["mains_initiales_toutes"]],
         "jouables": jouables,
         "tour": PARTIE["tour"],
@@ -491,6 +492,11 @@ def route_export_donne():
     return jsonify({"texte": "\n".join(lignes)})
 
 port = int(os.environ.get("PORT", 5001))
+
+@app.route("/test_cartes")
+def test_cartes():
+    return render_template("test_cartes.html")
+
 
 @app.route("/api/rejouer_match", methods=["POST"])
 def route_rejouer_match():

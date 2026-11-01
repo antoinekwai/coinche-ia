@@ -6,132 +6,204 @@
     <title>Coinche IA — Jouer & Apprendre</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background: #1a1e24; color: #fff; display: flex; height: 100vh; overflow: hidden; }
+        body { background: #12151a; color: #fff; display: flex; height: 100vh; overflow: hidden; }
 
-        /* TAPIS VERT */
-        #table-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 10px; background: radial-gradient(circle, #2d6a4f 0%, #1b4332 80%, #081c15 100%); position: relative; width: 100%; height: 100%; }
+        /* TAPIS VERT - PLEINE LARGEUR PAR DÉFAUT */
+        #table-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 12px; background: radial-gradient(circle, #2d6a4f 0%, #1b4332 75%, #081c15 100%); position: relative; width: 100%; height: 100%; box-shadow: inset 0 0 80px rgba(0,0,0,0.6); transition: flex 0.3s ease; }
         
-        /* BARRES HAUT */
-        .top-bar-container { width: 100%; display: flex; justify-content: space-between; align-items: flex-start; z-index: 10; gap: 8px; }
-        .score-bar { background: rgba(0,0,0,0.65); padding: 6px 12px; border-radius: 8px; font-size: 13px; border: 1px solid rgba(255,255,255,0.2); white-space: nowrap; }
+        .top-bar-container { width: 100%; display: flex; justify-content: space-between; align-items: center; z-index: 10; gap: 8px; }
+        .score-bar { background: rgba(0,0,0,0.7); padding: 6px 14px; border-radius: 20px; font-size: 13px; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; gap: 8px; backdrop-filter: blur(4px); }
         .score-bar span { font-weight: bold; color: #74c69d; }
 
-        .contract-badge { background: rgba(0,0,0,0.85); border: 2px solid #ffd166; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: bold; color: #fff; display: none; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
-        .contract-badge.coinche { border-color: #e63946; background: rgba(180, 20, 30, 0.9); }
+        .contract-badge { background: rgba(0,0,0,0.85); border: 2px solid #ffd166; padding: 5px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; color: #fff; display: none; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+        .contract-badge.coinche { border-color: #e63946; background: rgba(180, 20, 30, 0.95); }
 
-        .info-bar { background: rgba(0,0,0,0.65); padding: 6px 12px; border-radius: 8px; font-size: 12px; text-align: right; border: 1px solid rgba(255,255,255,0.2); max-width: 380px; }
+        .info-bar { background: rgba(0,0,0,0.7); padding: 6px 14px; border-radius: 20px; font-size: 12px; text-align: right; border: 1px solid rgba(255,255,255,0.2); max-width: 380px; backdrop-filter: blur(4px); }
 
-        /* JOUEURS */
+        /* JOUEURS & DOS DE CARTES */
         .player-area { display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2; position: relative; }
-        .player-header { display: flex; align-items: center; gap: 4px; margin-bottom: 2px; }
-        .player-name { font-weight: bold; font-size: 12px; background: rgba(0,0,0,0.7); padding: 2px 8px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); }
-        .player-name.active { border-color: #ffd166; color: #ffd166; box-shadow: 0 0 10px #ffd166; }
-        .dealer-chip { background: #ffd166; color: #111; font-weight: 900; border-radius: 50%; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; }
+        .player-header { display: flex; align-items: center; gap: 5px; margin-bottom: 4px; }
+        .player-name { font-weight: bold; font-size: 12px; background: rgba(0,0,0,0.75); padding: 3px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.25); }
+        .player-name.active { border-color: #ffd166; color: #ffd166; box-shadow: 0 0 12px #ffd166; }
+        .dealer-chip { background: #ffd166; color: #111; font-weight: 900; border-radius: 50%; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; border: 1px solid #fff; }
 
-        .bubble { background: #ffd166; color: #111; font-weight: bold; font-size: 12px; padding: 2px 8px; border-radius: 8px; margin-bottom: 2px; box-shadow: 0 2px 4px rgba(0,0,0,0.4); z-index: 20; border: 1px solid #000; }
+        /* GRANDES BULLES D'ANNONCES ÉLÉGANTES */
+        .bubble { background: #ffd166; color: #111; font-weight: 800; font-size: 15px; padding: 6px 14px; border-radius: 14px; margin-bottom: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); z-index: 20; border: 2px solid #000; animation: popBubble 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .bubble.belote-badge { background: #e76f51; color: #fff; border-color: #fff; font-size: 14px; }
+        @keyframes popBubble { 0% { transform: scale(0.3); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+        /* GRAND BANDEAU COINCHE CENTRAL */
+        #alert-coinche-banner { display: none; position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.8); background: #e63946; color: #fff; border: 4px solid #fff; padding: 15px 35px; border-radius: 20px; font-size: 28px; font-weight: 900; box-shadow: 0 10px 40px rgba(230, 57, 70, 0.9); z-index: 150; animation: flashCoinche 0.35s ease-out forwards; text-transform: uppercase; letter-spacing: 2px; }
+        @keyframes flashCoinche { 0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
 
         .middle-row { display: flex; width: 100%; justify-content: space-between; align-items: center; flex: 1; padding: 0 10px; }
         
-        /* PLI EN CROIX */
-        #center-trick { width: 280px; height: 210px; background: rgba(0,0,0,0.2); border-radius: 16px; border: 2px dashed rgba(255,255,255,0.2); position: relative; }
+        /* DOS DE CARTES */
+        .card-back-wrap { width: 44px; height: 64px; border-radius: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.4); overflow: hidden; background: #fff; }
+        .card-back-img { width: 100%; height: 100%; object-fit: fill; display: block; }
+        
+        .hand-opponent-h { display: flex; }
+        .hand-opponent-h .card-back-wrap { margin-left: -24px; }
+        .hand-opponent-h .card-back-wrap:first-child { margin-left: 0; }
+        
+        .hand-opponent-v { display: flex; flex-direction: column; }
+        .hand-opponent-v .card-back-wrap { margin-top: -46px; }
+        .hand-opponent-v .card-back-wrap:first-child { margin-top: 0; }
+
+        /* PLI CENTRAL */
+        #center-trick { width: 330px; height: 250px; background: rgba(0,0,0,0.25); border-radius: 20px; border: 2px dashed rgba(255,255,255,0.2); position: relative; }
         .trick-card { position: absolute; display: flex; flex-direction: column; align-items: center; }
-        .trick-card span { font-size: 9px; margin-top: 1px; background: rgba(0,0,0,0.7); padding: 1px 4px; border-radius: 3px; }
+        .trick-card span { font-size: 10px; margin-top: 3px; background: rgba(0,0,0,0.7); padding: 1px 5px; border-radius: 4px; }
 
-        .pos-south { bottom: 6px; left: 50%; transform: translateX(-50%); }
-        .pos-north { top: 6px; left: 50%; transform: translateX(-50%); }
-        .pos-west  { left: 6px; top: 50%; transform: translateY(-50%); }
-        .pos-east  { right: 6px; top: 50%; transform: translateY(-50%); }
+        .pos-south { bottom: 8px; left: 50%; transform: translateX(-50%); }
+        .pos-north { top: 8px; left: 50%; transform: translateX(-50%); }
+        .pos-west  { left: 12px; top: 50%; transform: translateY(-50%); }
+        .pos-east  { right: 12px; top: 50%; transform: translateY(-50%); }
 
-        .trick-winner-banner { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); background: #e76f51; color: #fff; font-weight: bold; font-size: 11px; padding: 2px 10px; border-radius: 8px; white-space: nowrap; z-index: 10; }
-        .trick-order-badge { position: absolute; top: -6px; right: -6px; background: #2ec4b6; color: #fff; font-size: 10px; font-weight: 900; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid #1a1e24; z-index: 5; }
+        .trick-winner-banner { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); background: #e76f51; color: #fff; font-weight: bold; font-size: 12px; padding: 3px 12px; border-radius: 10px; box-shadow: 0 3px 8px rgba(0,0,0,0.5); white-space: nowrap; z-index: 10; }
+        .trick-order-badge { position: absolute; top: -6px; right: -6px; background: #2ec4b6; color: #fff; font-size: 10px; font-weight: 900; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1.5px solid #1a1e24; z-index: 5; }
         .trick-order-badge.first { background: #ffd166; color: #111; }
 
-        #replay-bar { position: absolute; bottom: 105px; background: rgba(0,0,0,0.9); padding: 4px 10px; border-radius: 16px; display: none; gap: 8px; align-items: center; border: 1px solid #74c69d; z-index: 25; font-size: 12px; }
-        #replay-bar button { padding: 3px 8px; font-size: 11px; background: #2ec4b6; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+        #replay-bar { position: absolute; bottom: 135px; background: rgba(0,0,0,0.9); padding: 6px 14px; border-radius: 20px; display: none; gap: 10px; align-items: center; border: 1px solid #74c69d; z-index: 25; font-size: 13px; }
+        #replay-bar button { padding: 4px 10px; font-size: 12px; background: #2ec4b6; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
 
-        /* CARTES */
-        .hand { display: flex; gap: 4px; min-height: 40px; justify-content: center; }
-        .hand-side { display: flex; flex-direction: column; gap: 2px; }
-
-        .card { width: 56px; height: 82px; background: #fff; color: #111; border-radius: 5px; display: flex; flex-direction: column; justify-content: space-between; padding: 4px; font-weight: bold; font-size: 15px; box-shadow: 0 3px 8px rgba(0,0,0,0.3); user-select: none; }
-        .card.mini { width: 30px; height: 42px; font-size: 9px; padding: 1px; border-radius: 3px; }
-        .card.red { color: #d90429; }
-        .card.playable { cursor: pointer; border: 2px solid #ffd166; box-shadow: 0 0 10px #ffd166; transform: translateY(-6px); }
-        .card-corner { font-size: 10px; line-height: 1; }
-        .card.mini .card-corner { font-size: 8px; }
-        .card-center { font-size: 20px; align-self: center; line-height: 1; }
-        .card.mini .card-center { font-size: 12px; }
+        /* CARTES DU JOUEUR (GRANDES & SURVOL FLUIDE) */
+        .hand { display: flex; gap: 10px; justify-content: center; }
+        
+        .card-wrap { width: 84px; height: 122px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.35); user-select: none; position: relative; background: #fff; transition: transform 0.16s ease-out, box-shadow 0.16s ease-out; }
+        .card-wrap img { width: 100%; height: 100%; border-radius: 6px; display: block; object-fit: fill; pointer-events: none; }
+        
+        .card-wrap.mini { width: 34px; height: 48px; border-radius: 3px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        .card-wrap.mini img { border-radius: 3px; }
+        
+        .card-wrap.is-trump { box-shadow: 0 0 10px rgba(255, 209, 102, 0.7); }
+        .card-wrap.playable { cursor: pointer; outline: 3px solid #ffd166; box-shadow: 0 0 14px #ffd166; }
+        .card-wrap.playable:hover { transform: translateY(-8px); box-shadow: 0 6px 18px rgba(255, 209, 102, 0.9); }
 
         /* ENCHERES */
-        #bid-controls { background: rgba(0,0,0,0.92); padding: 6px 10px; border-radius: 10px; display: flex; gap: 6px; align-items: center; margin-bottom: 6px; border: 1px solid #ffd166; z-index: 30; }
-        select, button { padding: 6px 10px; font-size: 12px; border-radius: 5px; border: none; font-weight: bold; cursor: pointer; }
+        #bid-controls { background: rgba(0,0,0,0.92); padding: 8px 14px; border-radius: 12px; display: flex; gap: 8px; align-items: center; margin-bottom: 6px; border: 1px solid #ffd166; z-index: 30; }
+        select, button { padding: 7px 12px; font-size: 13px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; }
         button.btn-primary { background: #ffd166; color: #111; }
         button.btn-secondary { background: #495057; color: #fff; }
         button.btn-danger { background: #e63946; color: #fff; }
         button.btn-danger:disabled { background: #555; cursor: not-allowed; opacity: 0.5; }
 
-        /* PROFESSEUR */
-        #professor-panel { width: 400px; background: #111418; border-left: 2px solid #2d6a4f; display: flex; flex-direction: column; padding: 14px; overflow-y: auto; }
-        #professor-panel h2 { font-size: 16px; color: #74c69d; margin: 0; }
+        /* PROFESSEUR : MASQUÉ PAR DÉFAUT PENDANT LE JEU */
+        #professor-panel { width: 440px; background: #111418; border-left: 2px solid #2d6a4f; display: none; flex-direction: column; padding: 16px; overflow-y: auto; position: relative; animation: slideInPanel 0.3s ease-out; }
+        @keyframes slideInPanel { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        #professor-panel h2 { font-size: 17px; color: #74c69d; margin: 0; }
         
-        .debrief-section { margin-bottom: 12px; }
-        .debrief-section h3 { font-size: 11px; color: #adb5bd; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .debrief-section { margin-bottom: 14px; }
+        .debrief-section h3 { font-size: 12px; color: #adb5bd; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        .score-summary-box { background: #1f242d; border-radius: 8px; padding: 8px; border: 1px solid #3a86ff; margin-bottom: 10px; font-size: 12px; }
-        .score-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
-        .score-row.total { border-top: 1px solid #444; margin-top: 4px; padding-top: 4px; font-weight: bold; font-size: 13px; color: #ffd166; }
+        .score-summary-box { background: #1f242d; border-radius: 8px; padding: 10px; border: 1px solid #3a86ff; margin-bottom: 12px; font-size: 13px; }
+        .score-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
+        .score-row.total { border-top: 1px solid #444; margin-top: 5px; padding-top: 5px; font-weight: bold; font-size: 13px; color: #ffd166; }
 
-        .tricks-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 8px; }
-        .trick-btn { background: #1e232a; border: 1px solid #444; color: #fff; border-radius: 5px; padding: 5px 2px; font-size: 11px; cursor: pointer; text-align: center; }
+        .tricks-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
+        .trick-btn { background: #1e232a; border: 1px solid #444; color: #fff; border-radius: 6px; padding: 6px 3px; font-size: 11px; cursor: pointer; text-align: center; }
         .trick-btn:hover, .trick-btn.active { border-color: #ffd166; background: #2a313b; }
-        .trick-btn .badge { display: block; font-size: 9px; margin-top: 2px; font-weight: bold; }
+        .trick-btn .badge { display: block; font-size: 10px; margin-top: 2px; font-weight: bold; }
         .badge.green { color: #2ec4b6; }
         .badge.blue { color: #3a86ff; }
         .badge.orange { color: #ff9f1c; }
         .badge.red { color: #e71d36; }
         .badge.grey { color: #6c757d; }
 
-        #trick-detail-card { background: #1c2128; border-radius: 8px; padding: 8px; border: 1px solid #ffd166; margin-bottom: 10px; font-size: 11px; }
-        .options-table { width: 100%; font-size: 11px; border-collapse: collapse; margin-top: 4px; }
-        .options-table td, .options-table th { padding: 2px 4px; border-bottom: 1px solid #2d333b; text-align: left; }
+        #trick-detail-card { background: #1c2128; border-radius: 8px; padding: 10px; border: 1px solid #ffd166; margin-bottom: 12px; font-size: 12px; }
+        .options-table { width: 100%; font-size: 12px; border-collapse: collapse; margin-top: 6px; }
+        .options-table td, .options-table th { padding: 3px 5px; border-bottom: 1px solid #2d333b; text-align: left; }
 
-        .btn-next-donne { width: 100%; padding: 10px; font-size: 13px; background: #2ec4b6; color: #fff; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; }
+        /* BOUTON DONNE SUIVANTE FIXÉ EN BAS (STICKY) */
+        .btn-sticky-container { position: sticky; bottom: -16px; margin: 16px -16px -16px -16px; padding: 12px 16px; background: #111418; border-top: 1px solid #2d6a4f; z-index: 15; }
+        .btn-next-donne { width: 100%; padding: 12px; font-size: 14px; background: #2ec4b6; color: #fff; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
+        .btn-next-donne:hover { background: #20a396; }
 
-        /* ======================================================== */
-        /* --- ADAPTATIONS SMARTPHONE / ÉCRAN ÉTROIT (<= 850px) --- */
-        /* ======================================================== */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 200; align-items: center; justify-content: center; padding: 15px; }
+
+        /* DISTRIBUTION ANIMÉE */
+        #deal-animation-stage { display: none; position: absolute; inset: 0; z-index: 100; pointer-events: none; overflow: hidden; }
+        .deck-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 50px; height: 72px; background: #1d3557; border: 2px solid #fff; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
+        .flying-card-anim { position: absolute; width: 44px; height: 64px; border-radius: 4px; background: #1d3557; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.4); top: 50%; left: 50%; transform: translate(-50%, -50%); transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1); opacity: 0; }
+
+        /* MOBILE */
         @media (max-width: 850px) {
             body { flex-direction: column; height: auto; overflow-y: auto; }
-            #table-container { height: 100vh; min-height: 520px; padding: 6px; }
-
-            .top-bar-container { flex-direction: column; align-items: stretch; gap: 4px; }
-            .score-bar { font-size: 11px; padding: 4px 8px; text-align: center; }
-            .info-bar { font-size: 10px; text-align: center; max-width: 100%; padding: 3px 6px; }
-            .contract-badge { align-self: center; font-size: 11px; padding: 3px 8px; }
-
-            #center-trick { width: 220px; height: 160px; }
-            .middle-row { padding: 0 2px; }
-
-            /* Cartes plus fines pour tenir à 8 sur 375px d'écran */
-            .card { width: 41px; height: 60px; font-size: 12px; padding: 2px; border-radius: 4px; }
-            .card-corner { font-size: 8px; }
-            .card-center { font-size: 14px; }
+            #table-container { height: 100vh; min-height: 540px; padding: 6px; }
+            .card-wrap { width: 44px; height: 64px; }
+            .card-wrap.playable:hover { transform: translateY(-4px); }
             .hand { gap: 2px; }
-
-            #replay-bar { bottom: 80px; font-size: 11px; padding: 4px 8px; }
-
-            /* Le panneau Professeur se place SOUS le tapis de jeu */
             #professor-panel { width: 100%; border-left: none; border-top: 3px solid #2d6a4f; min-height: 400px; padding: 12px; }
+            .btn-sticky-container { position: relative; bottom: 0; margin: 12px 0 0 0; padding: 0; border: none; }
         }
     </style>
 </head>
 <body>
 
+    <!-- MODAL DE BIENVENUE -->
+    <div id="modal-welcome" class="modal-overlay" style="display: flex;">
+        <div style="background:#1a1e24; border:2px solid #74c69d; border-radius:14px; padding:25px; max-width:480px; width:100%; text-align:center; box-shadow:0 8px 25px rgba(0,0,0,0.8);">
+            <div style="font-size:42px; margin-bottom:8px;">🃏</div>
+            <h2 style="color:#ffd166; font-size:22px; margin-bottom:10px;">Bienvenue sur Coinche IA</h2>
+            <p style="font-size:13px; color:#ced4da; line-height:1.5; margin-bottom:18px;">
+                Affrontez nos bots entraînés par intelligence artificielle et analysez chacune de vos décisions grâce au <b>Mode Professeur</b> !
+            </p>
+            
+            <div style="text-align:left; background:#111418; padding:12px; border-radius:8px; margin-bottom:18px; border:1px solid #333;">
+                <label style="font-size:12px; font-weight:bold; color:#74c69d; display:block; margin-bottom:6px;">Niveau des partenaires et adversaires :</label>
+                <div style="margin-bottom:8px;">
+                    <label style="font-size:13px; cursor:pointer; display:flex; align-items:center; gap:8px;">
+                        <input type="radio" name="radio-level" value="normal" checked>
+                        <span>⚡ <b>IA Classique</b> — Rapide, jeu fluide & entraîné</span>
+                    </label>
+                </div>
+                <div>
+                    <label style="font-size:13px; cursor:pointer; display:flex; align-items:center; gap:8px;">
+                        <input type="radio" name="radio-level" value="expert">
+                        <span>🧠 <b>Grand Maître (Monte Carlo)</b> — Réflexion approfondie (~1s)</span>
+                    </label>
+                </div>
+            </div>
+
+            <button onclick="validerAccueilEtLancer()" style="width:100%; padding:14px; font-size:16px; background:#ffd166; color:#111; font-weight:bold; border:none; border-radius:8px; cursor:pointer;">
+                ▶ Commencer la partie
+            </button>
+        </div>
+    </div>
+
+    <!-- POP-UP FIN DE DONNE -->
+    <div id="modal-donne" class="modal-overlay">
+        <div style="background:#1a1e24; border:2px solid #ffd166; border-radius:14px; padding:22px; max-width:440px; width:100%; text-align:center; box-shadow:0 8px 25px rgba(0,0,0,0.8);">
+            <div id="donne-result-icon" style="font-size:36px; margin-bottom:6px;">🎉</div>
+            <h2 id="donne-result-title" style="color:#ffd166; font-size:20px; margin-bottom:12px;">Donne Terminée</h2>
+            
+            <div class="score-summary-box" id="modal-donne-summary" style="text-align:left; line-height:1.6; margin-bottom:16px; font-size:13px;"></div>
+
+            <div style="display:flex; gap:10px;">
+                <button onclick="fermerModalDonneEtAnalyser()" style="flex:1; padding:12px; font-size:13px; background:#495057; color:#fff; font-weight:bold; border:none; border-radius:6px; cursor:pointer;">
+                    🔍 Analyser la donne
+                </button>
+                <button onclick="nouvelleDonneDepuisModal()" style="flex:1.2; padding:12px; font-size:13px; background:#2ec4b6; color:#fff; font-weight:bold; border:none; border-radius:6px; cursor:pointer;">
+                    Donne Suivante ➔
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAPIS VERT -->
     <div id="table-container">
-        <!-- BARRE DU HAUT : SCORE, CONTRAT, INFOS -->
+        <!-- DISTRIBUTION ANIMÉE -->
+        <div id="deal-animation-stage">
+            <div class="deck-center"></div>
+        </div>
+
+        <!-- BANDEAU FLASH COINCHE -->
+        <div id="alert-coinche-banner">🔥 COINCHE !</div>
+
         <div class="top-bar-container">
             <div class="score-bar">
-                Vous <span><span id="score-nous">0</span></span> — <span><span id="score-eux">0</span></span> Eux (Obj: <span id="score-obj">1000</span>)
+                <span>Score : <span id="score-nous">0</span> — <span id="score-eux">0</span></span>
+                <span style="font-size:11px; color:#adb5bd;">(Obj: <span id="score-obj">1000</span>)</span>
             </div>
             
             <div id="active-contract-badge" class="contract-badge"></div>
@@ -139,22 +211,21 @@
             <div class="info-bar" id="info-message">Chargement...</div>
         </div>
 
-        <!-- REPLAY BAR -->
         <div id="replay-bar">
             <span>Pli <b id="replay-num">1</b>/8</span>
             <button onclick="changerPliReplay(-1)">◀</button>
             <button onclick="changerPliReplay(1)">▶</button>
-            <button style="background:#495057;" onclick="quitterReplay()">✕</button>
+            <button style="background:#495057;" onclick="quitterReplay()">✕ Fermer</button>
         </div>
 
-        <!-- NORD -->
+        <!-- NORD (Partenaire) -->
         <div class="player-area" id="area-north">
             <div id="bubble-2" class="bubble" style="display:none;"></div>
             <div class="player-header">
-                <div class="player-name" id="name-2">Nord</div>
+                <div class="player-name" id="name-2">Partenaire (Nord)</div>
                 <span id="chip-2" class="dealer-chip" style="display:none;">D</span>
             </div>
-            <div class="hand" id="hand-north"></div>
+            <div id="hand-north" class="hand"></div>
         </div>
 
         <!-- CENTRE : OUEST, TAPIS, EST -->
@@ -165,7 +236,7 @@
                     <div class="player-name" id="name-1">Ouest</div>
                     <span id="chip-1" class="dealer-chip" style="display:none;">D</span>
                 </div>
-                <div class="hand-side" id="hand-west"></div>
+                <div id="hand-west" class="hand-side"></div>
             </div>
 
             <div id="center-trick"></div>
@@ -176,11 +247,11 @@
                     <div class="player-name" id="name-3">Est</div>
                     <span id="chip-3" class="dealer-chip" style="display:none;">D</span>
                 </div>
-                <div class="hand-side" id="hand-east"></div>
+                <div id="hand-east" class="hand-side"></div>
             </div>
         </div>
 
-        <!-- SUD -->
+        <!-- SUD (Vous) -->
         <div class="player-area" id="area-south">
             <div id="bubble-0" class="bubble" style="display:none;"></div>
             
@@ -188,41 +259,46 @@
                 <button class="btn-secondary" onclick="actionEnchere('passe')">Passe</button>
                 <select id="bid-valeur"></select>
                 <select id="bid-couleur">
-                    <option value="♠">♠</option><option value="♥">♥</option>
-                    <option value="♦">♦</option><option value="♣">♣</option>
+                    <option value="♠">♠ Pique</option><option value="♥">♥ Cœur</option>
+                    <option value="♦">♦ Carreau</option><option value="♣">♣ Trèfle</option>
                 </select>
                 <button class="btn-primary" onclick="validerEnchere()">OK</button>
                 <button class="btn-danger" id="btn-coinche" onclick="actionEnchere('coinche')">Coinche</button>
             </div>
 
             <div class="player-header">
-                <div class="player-name active" id="name-0">Vous</div>
+                <div class="player-name active" id="name-0">Vous (Sud)</div>
                 <span id="chip-0" class="dealer-chip" style="display:none;">D</span>
             </div>
             <div class="hand" id="hand-south"></div>
         </div>
     </div>
 
-    <!-- PROFESSEUR (Sous le tapis sur mobile, à droite sur PC) -->
+    <!-- PROFESSEUR (MASQUÉ PENDANT LA PARTIE) -->
     <div id="professor-panel">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid #333; padding-bottom:4px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid #333; padding-bottom:6px;">
             <h2>🎓 Mode Professeur</h2>
-            <button id="btn-export" onclick="exporterDonne()" style="background:#2a313b; color:#74c69d; border:1px solid #74c69d; padding:3px 6px; font-size:10px; border-radius:4px; cursor:pointer;">
-                📋 Exporter
-            </button>
+            <div style="display:flex; gap:6px;">
+                <button id="btn-export" onclick="exporterDonne()" style="background:#2a313b; color:#74c69d; border:1px solid #74c69d; padding:4px 8px; font-size:11px; border-radius:6px; cursor:pointer;">
+                    📋 Exporter
+                </button>
+                <button onclick="fermerPanneauProfesseur()" style="background:#495057; color:#fff; border:none; padding:4px 8px; font-size:11px; border-radius:6px; cursor:pointer;">
+                    ✕ Fermer
+                </button>
+            </div>
         </div>
         
-        <div id="section-score-donne" style="display:none;">
+        <div id="section-score-donne">
             <h3>Bilan de la donne</h3>
             <div class="score-summary-box" id="box-score-summary"></div>
         </div>
 
-        <div class="debrief-section" id="section-debrief-encheres" style="display:none;">
+        <div class="debrief-section" id="section-debrief-encheres">
             <h3>Analyse des enchères (Monte Carlo)</h3>
-            <div id="feedback-encheres" style="font-size:11px; line-height:1.4;"></div>
+            <div id="feedback-encheres" style="font-size:12px; line-height:1.5;"></div>
         </div>
 
-        <div class="debrief-section" id="section-debrief-carte" style="display:none;">
+        <div class="debrief-section" id="section-debrief-carte">
             <h3>Revue des 8 plis</h3>
             <div class="tricks-grid" id="tricks-grid"></div>
             <div id="trick-detail-card" style="display:none;"></div>
@@ -230,14 +306,16 @@
 
         <div class="debrief-section">
             <h3>Historique des enchères</h3>
-            <div id="bids-history" style="font-size: 11px; line-height: 1.4; color: #adb5bd;"></div>
+            <div id="bids-history" style="font-size: 12px; line-height: 1.5; color: #adb5bd;"></div>
         </div>
 
-        <button class="btn-next-donne" id="btn-nouvelle-donne" style="display:none;" onclick="nouvelleDonne()">Donne Suivante ➔</button>
+        <div class="btn-sticky-container">
+            <button class="btn-next-donne" onclick="nouvelleDonne()">Donne Suivante ➔</button>
+        </div>
     </div>
 
-    <!-- MODAL FIN DE MATCH (1000 POINTS) -->
-    <div id="modal-match" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); z-index:200; align-items:center; justify-content:center; padding:15px;">
+    <!-- MODAL FIN DE MATCH -->
+    <div id="modal-match" class="modal-overlay">
         <div style="background:#1a1e24; border:2px solid #ffd166; border-radius:12px; padding:20px; max-width:440px; width:100%; text-align:center;">
             <div id="match-header-icon" style="font-size:40px; margin-bottom:8px;">🏆</div>
             <h2 id="match-title" style="color:#ffd166; font-size:20px; margin-bottom:12px;">Victoire !</h2>
@@ -253,18 +331,83 @@
         let boucleActive = false;
         let pliSelectionne = null;
         let indexReplayPli = null;
+        let dernierPliCle = "";
+        let modalDonneAffichee = false;
+        let audioCtx = null;
+        let derniereAnnonceVocale = "";
+
+        const CARD_BACK_URL = "https://deckofcardsapi.com/static/img/back.png";
+
+        // GESTION DU SON & DES VOIX
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        // Bruitage synthétique de carte posée
+        function playCardSound() {
+            try {
+                const ctx = getAudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(180, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.08);
+            } catch(e) {}
+        }
+
+        // Synthèse vocale française pour Coinche, Belote, Rebelote
+        function speakVoice(text) {
+            try {
+                if ('speechSynthesis' in window) {
+                    const u = new SpeechSynthesisUtterance(text);
+                    u.lang = 'fr-FR';
+                    u.rate = 1.1;
+                    window.speechSynthesis.speak(u);
+                }
+            } catch(e) {}
+        }
+
+        function getCardImageUrl(r, c) {
+            const rankMap = { 'A': 'A', '10': '0', 'V': 'J', 'D': 'Q', 'R': 'K', '7': '7', '8': '8', '9': '9' };
+            const suitMap = { '♠': 'S', '♥': 'H', '♦': 'D', '♣': 'C' };
+            const rCode = rankMap[r] || r;
+            const sCode = suitMap[c] || 'S';
+            return `https://deckofcardsapi.com/static/img/${rCode}${sCode}.png`;
+        }
 
         function renderCardHTML(r, c, playable=false, mini=false) {
-            const isRed = (c === '♥' || c === '♦') ? 'red' : '';
+            const imgUrl = getCardImageUrl(r, c);
             const playClass = playable ? 'playable' : '';
             const miniClass = mini ? 'mini' : '';
+            const isTrump = (etatJeu.contrat && c === etatJeu.contrat.atout && !mini) ? 'is-trump' : '';
+            const clickAttr = playable ? `onclick="jouerCarte('${r}', '${c}')"` : '';
+
             return `
-                <div class="card ${isRed} ${playClass} ${miniClass}" onclick="${playable ? `jouerCarte('${r}', '${c}')` : ''}">
-                    <div class="card-corner">${r}<br>${c}</div>
-                    <div class="card-center">${c}</div>
-                    <div class="card-corner" style="transform: rotate(180deg);">${r}<br>${c}</div>
+                <div class="card-wrap ${playClass} ${miniClass} ${isTrump}" ${clickAttr} title="${r}${c}">
+                    <img src="${imgUrl}" alt="${r}${c}">
                 </div>
             `;
+        }
+
+        function renderCardBacks(nb, horizontal=true) {
+            let html = `<div class="${horizontal ? 'hand-opponent-h' : 'hand-opponent-v'}">`;
+            for (let i = 0; i < nb; i++) {
+                html += `<div class="card-back-wrap"><img class="card-back-img" src="${CARD_BACK_URL}" alt="Dos"></div>`;
+            }
+            html += `</div>`;
+            return html;
         }
 
         async function actualiser() {
@@ -286,12 +429,28 @@
                 if (chip) chip.style.display = (etatJeu.donneur === i) ? 'inline-flex' : 'none';
             }
 
-            // Bulles d'annonces
+            // Gestion des bulles & des voix
             for (let i = 0; i < 4; i++) {
                 const b = document.getElementById(`bubble-${i}`);
-                if (etatJeu.bulles && etatJeu.bulles[i] && etatJeu.bulles[i] !== "") {
-                    b.innerText = etatJeu.bulles[i];
+                const texteBulle = etatJeu.bulles ? etatJeu.bulles[i] : "";
+                
+                if (texteBulle && texteBulle !== "") {
+                    b.innerText = texteBulle;
+                    b.className = "bubble" + (texteBulle.includes("Belote") ? " belote-badge" : "");
                     b.style.display = 'block';
+
+                    // Déclencheurs vocaux
+                    if (texteBulle !== derniereAnnonceVocale) {
+                        derniereAnnonceVocale = texteBulle;
+                        if (texteBulle.includes("COINCHE")) {
+                            speakVoice("Coinche !");
+                            declencherBandeauCoinche();
+                        } else if (texteBulle.includes("Belote")) {
+                            speakVoice("Belote !");
+                        } else if (texteBulle.includes("Rebelote")) {
+                            speakVoice("Rebelote !");
+                        }
+                    }
                 } else {
                     b.style.display = 'none';
                 }
@@ -310,7 +469,7 @@
                     <span>Atout <b>${c.atout}</b></span>
                     <span>|</span>
                     <span><b>${nomC}</b> (${camp})</span>
-                    ${isCoinche ? '<span style="color:#fff; background:#e63946; padding:1px 4px; border-radius:3px; font-size:10px;">x2</span>' : ''}
+                    ${isCoinche ? '<span style="color:#fff; background:#e63946; padding:1px 5px; border-radius:3px; font-size:10px;">x2</span>' : ''}
                 `;
                 contractBadge.style.display = 'flex';
             } else {
@@ -331,11 +490,13 @@
                 southHand.innerHTML += renderCardHTML(r, c, isPlayable);
             });
 
-            // Pli central
+            // Dos de cartes adverses
             if (indexReplayPli === null) {
-                document.getElementById('hand-north').innerHTML = '';
-                document.getElementById('hand-west').innerHTML = '';
-                document.getElementById('hand-east').innerHTML = '';
+                const nbC = etatJeu.nb_cartes_joueurs || [8, 8, 8, 8];
+                document.getElementById('hand-north').innerHTML = (etatJeu.etat !== 'annonces') ? renderCardBacks(nbC[2], true) : '';
+                document.getElementById('hand-west').innerHTML  = (etatJeu.etat !== 'annonces') ? renderCardBacks(nbC[1], false) : '';
+                document.getElementById('hand-east').innerHTML  = (etatJeu.etat !== 'annonces') ? renderCardBacks(nbC[3], false) : '';
+
                 afficherPliSurTapis(etatJeu.pli_en_cours, etatJeu.info_pli_termine, false);
             }
 
@@ -343,7 +504,6 @@
             const bidControls = document.getElementById('bid-controls');
             if (etatJeu.etat === 'annonces' && etatJeu.tour === 0) {
                 bidControls.style.display = 'flex';
-                
                 let minVal = 80;
                 let contratExiste = (etatJeu.contrat && typeof etatJeu.contrat.valeur === 'number');
                 if (contratExiste) {
@@ -363,8 +523,7 @@
                 }
 
                 const btnCoinche = document.getElementById('btn-coinche');
-                const peutCoincher = Boolean(contratExiste && (etatJeu.contrat.joueur % 2 !== 0) && !etatJeu.contrat.coinche);
-                btnCoinche.disabled = !peutCoincher;
+                btnCoinche.disabled = !Boolean(contratExiste && (etatJeu.contrat.joueur % 2 !== 0) && !etatJeu.contrat.coinche);
             } else {
                 bidControls.style.display = 'none';
             }
@@ -373,23 +532,13 @@
             const bidsHistory = document.getElementById('bids-history');
             bidsHistory.innerHTML = etatJeu.encheres.map(([nom, d]) => `<div><b>${nom}</b> : ${d}</div>`).join('') || 'En attente...';
 
-            // DEBRIEF
-            const sScore = document.getElementById('section-score-donne');
-            const sDebriefE = document.getElementById('section-debrief-encheres');
-            const sDebriefC = document.getElementById('section-debrief-carte');
-            const btnNext = document.getElementById('btn-nouvelle-donne');
+            // GESTION DU FIN DE DONNE
             const replayBar = document.getElementById('replay-bar');
 
             if (etatJeu.etat === 'debrief') {
-                sScore.style.display = 'block';
-                sDebriefE.style.display = 'block';
-                sDebriefC.style.display = 'block';
-                btnNext.style.display = 'block';
-                replayBar.style.display = 'flex';
-
                 const b = etatJeu.bilan_donne;
                 if (b) {
-                    document.getElementById('box-score-summary').innerHTML = `
+                    const bilanHtml = `
                         <div class="score-row"><span>Contrat :</span> <b>${b.contrat_nom} (${b.preneur})</b></div>
                         <div class="score-row"><span>Points faits :</span> <b>Vous ${b.pts_nous} — ${b.pts_eux} Eux</b></div>
                         <div class="score-row"><span>Plis faits :</span> <span>Vous ${b.plis_nous} — ${b.plis_eux} Eux</span></div>
@@ -399,6 +548,17 @@
                             <span>${b.reussi ? '✅ RÉUSSI' : '❌ CHUTÉ'} (+${b.marque_nous} / +${b.marque_eux})</span>
                         </div>
                     `;
+                    document.getElementById('box-score-summary').innerHTML = bilanHtml;
+
+                    // POP-UP AUTOMATIQUE
+                    if (!modalDonneAffichee && !etatJeu.match_termine) {
+                        modalDonneAffichee = true;
+                        document.getElementById('donne-result-icon').innerText = b.reussi ? '🎉' : '💔';
+                        document.getElementById('donne-result-title').innerText = b.reussi ? 'Contrat Réussi !' : 'Contrat Chuté...';
+                        document.getElementById('donne-result-title').style.color = b.reussi ? '#74c69d' : '#e63946';
+                        document.getElementById('modal-donne-summary').innerHTML = bilanHtml;
+                        document.getElementById('modal-donne').style.display = 'flex';
+                    }
                 }
 
                 document.getElementById('feedback-encheres').innerHTML = etatJeu.debrief_encheres.map(txt => {
@@ -423,8 +583,8 @@
                     afficherDetailPli(0);
                 }
 
-                // Détection de fin de match
                 if (etatJeu.match_termine && etatJeu.bilan_match) {
+                    document.getElementById('modal-donne').style.display = 'none';
                     const bm = etatJeu.bilan_match;
                     document.getElementById('modal-match').style.display = 'flex';
                     document.getElementById('match-header-icon').innerText = bm.victoire ? '🏆' : '💀';
@@ -444,17 +604,44 @@
                 }
 
             } else {
-                sScore.style.display = 'none';
-                sDebriefE.style.display = 'none';
-                sDebriefC.style.display = 'none';
-                btnNext.style.display = 'none';
+                // PENDANT LA PARTIE : MASQUER COMPLÈTEMENT LE PROFESSEUR
+                document.getElementById('professor-panel').style.display = 'none';
                 replayBar.style.display = 'none';
+                document.getElementById('modal-donne').style.display = 'none';
+                modalDonneAffichee = false;
                 pliSelectionne = null;
                 indexReplayPli = null;
             }
         }
 
+        function declencherBandeauCoinche() {
+            const banner = document.getElementById('alert-coinche-banner');
+            banner.style.display = 'block';
+            setTimeout(() => { banner.style.display = 'none'; }, 2000);
+        }
+
+        function fermerModalDonneEtAnalyser() {
+            document.getElementById('modal-donne').style.display = 'none';
+            // Ouvrir le panneau Professeur
+            document.getElementById('professor-panel').style.display = 'flex';
+            document.getElementById('replay-bar').style.display = 'flex';
+        }
+
+        function fermerPanneauProfesseur() {
+            document.getElementById('professor-panel').style.display = 'none';
+            quitterReplay();
+        }
+
+        function nouvelleDonneDepuisModal() {
+            document.getElementById('modal-donne').style.display = 'none';
+            nouvelleDonne();
+        }
+
         function afficherPliSurTapis(cartesPli, infoTermine, isReplay=false) {
+            const clePli = JSON.stringify(cartesPli) + (infoTermine ? infoTermine.gagnant : '') + String(isReplay);
+            if (clePli === dernierPliCle) return;
+            dernierPliCle = clePli;
+
             const center = document.getElementById('center-trick');
             center.innerHTML = '';
             const posClasses = ["pos-south", "pos-west", "pos-north", "pos-east"];
@@ -521,6 +708,7 @@
         function afficherDetailPli(idx) {
             pliSelectionne = idx;
             indexReplayPli = idx;
+            dernierPliCle = "";
             const item = etatJeu.debrief_carte[idx];
             const detailCard = document.getElementById('trick-detail-card');
             detailCard.style.display = 'block';
@@ -583,6 +771,8 @@
 
         function quitterReplay() {
             indexReplayPli = null;
+            dernierPliCle = "";
+            document.getElementById('replay-bar').style.display = 'none';
             actualiser();
         }
 
@@ -593,14 +783,17 @@
                 (etatJeu.etat === 'jeu' && etatJeu.tour !== 0 && etatJeu.pli_en_cours.length < 4)) {
                 
                 boucleActive = true;
-                try {
-                    await fetch('/api/step_bot', { method: 'POST' });
-                } catch (e) {
-                    console.error("Erreur step_bot:", e);
-                } finally {
-                    boucleActive = false;
-                    await actualiser();
-                }
+                setTimeout(async () => {
+                    try {
+                        await fetch('/api/step_bot', { method: 'POST' });
+                        playCardSound();
+                    } catch (e) {
+                        console.error("Erreur step_bot:", e);
+                    } finally {
+                        boucleActive = false;
+                        await actualiser();
+                    }
+                }, 1400);
             } 
             else if (etatJeu.etat === 'pli_termine') {
                 boucleActive = true;
@@ -613,11 +806,12 @@
                         boucleActive = false;
                         await actualiser();
                     }
-                }, 1600);
+                }, 2200);
             }
         }
 
         async function actionEnchere(choix) {
+            getAudioContext();
             await fetch('/api/action_enchere', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -633,6 +827,8 @@
         }
 
         async function jouerCarte(rang, couleur) {
+            getAudioContext();
+            playCardSound();
             await fetch('/api/jouer_carte', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -641,18 +837,70 @@
             await actualiser();
         }
 
+        // DISTRIBUTION ANIMÉE AVEC BRUITS DE CARTES
+        function animerDistribution(callback) {
+            const stage = document.getElementById('deal-animation-stage');
+            stage.style.display = 'block';
+            stage.innerHTML = '<div class="deck-center"></div>';
+
+            const targets = [
+                { top: '85%', left: '50%' }, // Sud
+                { top: '50%', left: '8%' },  // Ouest
+                { top: '15%', left: '50%' }, // Nord
+                { top: '50%', left: '92%' }  // Est
+            ];
+
+            for (let i = 0; i < 4; i++) {
+                setTimeout(() => {
+                    playCardSound();
+                    const card = document.createElement('div');
+                    card.className = 'flying-card-anim';
+                    stage.appendChild(card);
+                    
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.top = targets[i].top;
+                        card.style.left = targets[i].left;
+                    }, 20);
+                }, i * 160);
+            }
+
+            setTimeout(() => {
+                stage.style.display = 'none';
+                stage.innerHTML = '';
+                callback();
+            }, 1000);
+        }
+
         async function nouvelleDonne() {
             boucleActive = false;
             indexReplayPli = null;
             pliSelectionne = null;
-            await fetch('/api/nouvelle_donne', { method: 'POST' });
-            await actualiser();
+            dernierPliCle = "";
+            modalDonneAffichee = false;
+
+            animerDistribution(async () => {
+                await fetch('/api/nouvelle_donne', { method: 'POST' });
+                await actualiser();
+            });
         }
 
         async function rejouerMatch() {
             document.getElementById('modal-match').style.display = 'none';
             await fetch('/api/rejouer_match', { method: 'POST' });
-            await actualiser();
+            nouvelleDonne();
+        }
+
+        async function validerAccueilEtLancer() {
+            getAudioContext();
+            const niveau = document.querySelector('input[name="radio-level"]:checked').value;
+            await fetch('/api/changer_niveau_ia', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ niveau })
+            });
+            document.getElementById('modal-welcome').style.display = 'none';
+            nouvelleDonne();
         }
 
         async function exporterDonne() {
@@ -666,7 +914,6 @@
                 setTimeout(() => { btn.innerText = "📋 Exporter"; }, 2500);
             } catch (err) {
                 btn.innerText = "❌ Erreur";
-                console.error(err);
                 setTimeout(() => { btn.innerText = "📋 Exporter"; }, 2500);
             }
         }
@@ -674,7 +921,7 @@
         setInterval(async () => {
             await actualiser();
             await boucleJeu();
-        }, 800);
+        }, 600);
 
         actualiser();
     </script>
