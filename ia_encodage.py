@@ -70,7 +70,17 @@ def encoder_situation(main, pli, historique, contrat, joueur, regles, encheres=N
 
     eq = joueur % 2                                      # contexte
     pts, plis = bilan_passe(historique, atout)
-    x[236] = 1.0 if contrat["joueur"] % 2 == eq else 0.0
+    # Case 236 : Rôle exact dans la donne
+    # 1.0 = Je suis le déclarant (le patron de la couleur)
+    # 0.5 = Mon partenaire est le déclarant (je suis en soutien)
+    # 0.0 = Mon camp est en défense
+    if contrat["joueur"] == joueur:
+        x[236] = 1.0
+    elif contrat["joueur"] % 2 == eq:
+        x[236] = 0.5
+    else:
+        x[236] = 0.0
+
     x[237] = contrat["valeur"] / 160
     x[238] = 1.0 if contrat["capot"] else 0.0
     x[239] = contrat["coinche"] / 2

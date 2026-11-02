@@ -11,6 +11,14 @@ def annonce_valide(decision, contrat, regles):
     minimum = regles["annonce_min"] if contrat is None else contrat["valeur"] + regles["palier"]
     return minimum <= valeur <= regles["annonce_max"] and valeur % regles["palier"] == 0
 
+def premier_declarant_couleur(encheres, joueur, couleur):
+    """Retrouve le premier joueur de l'équipe ayant nommé cette couleur."""
+    camp = joueur % 2
+    for j, d in encheres:
+        if isinstance(d, tuple) and d[1] == couleur and (j % 2 == camp):
+            return j
+    return joueur
+
 
 def phase_annonces(mains, donneur, joueurs, regles, afficher=False):
     contrat = None
@@ -41,7 +49,9 @@ def phase_annonces(mains, donneur, joueurs, regles, afficher=False):
         if isinstance(decision, tuple) and annonce_valide(decision, contrat, regles):
             valeur, couleur = decision
             capot = regles["capot_autorise"] and valeur == regles["valeur_capot"]
-            contrat = {"valeur": valeur, "atout": couleur, "joueur": j, "coinche": 0, "capot": capot}
+            declarant = premier_declarant_couleur(encheres, j, couleur)
+            contrat = {"valeur": valeur, "atout": couleur, "joueur": declarant, "dernier_encherisseur": j, "coinche": 0, "capot": capot}
+
             passes = 0
             encheres.append((j, decision))
             if afficher:

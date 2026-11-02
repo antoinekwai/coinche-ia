@@ -34,7 +34,7 @@ def cartes_sont_equivalentes(c1, c2, main, pli, atout, historique):
     return False
 
 def diagnostiquer_erreur(c_jouee, top_c, jouables, main, pli, contrat, joueur, historique):
-    """Génère un diagnostic clair, précis et sans jargon."""
+    """Génère un diagnostic clair, uniquement en cas d'erreur tactique avérée."""
     atout = contrat["atout"]
     attaque = (contrat["joueur"] % 2 == joueur % 2)
     partenaire = (joueur + 2) % 4
@@ -43,53 +43,47 @@ def diagnostiquer_erreur(c_jouee, top_c, jouables, main, pli, contrat, joueur, h
     pts_jouee = points(c_jouee, atout)
     pts_top = points(top_c, atout)
 
-    # CAS 1 : À l'entame (pli vide)
+    # 1. ERREURS À L'ENTAME (Pli vide)
     if len(pli) == 0:
-        if est_preneur:
-            if top_c[1] == atout and c_jouee[1] != atout:
-                return f"En tant que preneur, il est préférable d'entamer atout ({top_c[0]}{top_c[1]}) pour désarmer la défense avant de jouer vos couleurs annexes."
-            if top_c[0] == "V" and top_c[1] == atout:
-                return "Quand vous purgez l'atout, commencez toujours par le Valet pour faire tomber les gros atouts sans risque."
-            if top_c[0] == "A" and c_jouee[0] != "A":
-                return f"Encaisser votre As de {top_c[1]} est plus sûr à ce stade pour faire une levée nette."
-        else: # En défense
-            if c_jouee[1] == atout and top_c[1] != atout:
-                return f"En défense, éviter d'entamer atout : cela aide le preneur à purger. Jouez plutôt dans une couleur annexe comme {top_c[0]}{top_c[1]}."
-            if top_c[0] == "A":
-                return f"En défense, encaisser votre As de {top_c[1]} assure des points directs pour faire chuter le contrat."
+        if est_preneur and top_c[0] == "V" and top_c[1] == atout and c_jouee[1] != atout:
+            return "En tant que preneur, purger les atouts au Valet d'entrée est prioritaire pour désarmer la défense."
+        if not attaque and c_jouee[1] == atout and top_c[1] != atout:
+            return "En défense, évitez d'entamer atout : cela aide le preneur à purger ses atouts sans effort."
+        if top_c[0] == "A" and top_c[1] != atout and c_jouee[0] != "A":
+            return f"Encaisser votre As de {top_c[1]} à l'entame garantit une levée nette avant l'apparition des coupes."
 
-    # CAS 2 : En cours de pli
+    # 2. ERREURS EN COURS DE PLI
     else:
         maitre_actuel, carte_maitresse = gagnant_pli(pli, atout)
         partenaire_maitre = (maitre_actuel == partenaire)
         adversaire_maitre = not partenaire_maitre
 
-        # A. Le partenaire est maître
+        # A. Partenaire maître
         if partenaire_maitre:
-            # On a coupé alors que le partenaire tenait le pli
+            # Dépenser un atout sur le maître du partenaire
             if c_jouee[1] == atout and top_c[1] != atout:
-                return f"Votre partenaire est déjà maître du pli avec {carte_maitresse[0]}{carte_maitresse[1]} : ne dépensez pas d'atout inutilement, défaussez {top_c[0]}{top_c[1]}."
-            # En dernier de parole (pli de 3 cartes)
-            if len(pli) == 3:
-                if not attaque and top_c[0] == "10" and c_jouee[0] != "10":
-                    return "En défense, votre partenaire gagne le pli de façon certaine : chargez votre 10 pour empocher des points cruciaux vers la chute."
-                if pts_jouee > pts_top and attaque:
-                    return f"En attaque, inutile de surcharger ce pli déjà gagné : préservez vos points ({c_jouee[0]}{c_jouee[1]}) et mettez plutôt {top_c[0]}{top_c[1]}."
+                return f"Votre partenaire gagne déjà le pli avec {carte_maitresse[0]}{carte_maitresse[1]} : économisez vos atouts, défaussez {top_c[0]}{top_c[1]}."
+            # Oubli de charger en défense en 4e position
+            if len(pli) == 3 and not attaque and top_c[0] == "10" and c_jouee[0] != "10":
+                return "En défense, le pli de votre partenaire est garanti en dernier : chargez votre 10 pour empocher des points décisifs."
 
-        # B. L'adversaire est maître
+        # B. Adversaire maître
         if adversaire_maitre:
-            # On donne des points sur un pli perdu
-            if pts_jouee >= 10 and pts_top < pts_jouee:
-                return f"Le pli est perdu au profit de l'adversaire : ne lui donnez pas {c_jouee[0]}{c_jouee[1]} ({pts_jouee} pts). Sacrifiez plutôt {top_c[0]}{top_c[1]}."
-            # On pouvait remporter le pli avec un maître
-            if top_c[0] in ("V", "A") and c_jouee[0] not in ("V", "A"):
-                return f"Prenez la main avec {top_c[0]}{top_c[1]} pour stopper l'attaque adverse et reprendre le contrôle."
+            pli_virtuel = list(pli) + [(joueur, top_c)]
+            top_gagne = (gagnant_pli(pli_virtuel, atout)[0] == joueur)
+            
+           
+            # Possibilité de couper ou remporter le pli manquée (uniquement si vous ne gagnez PAS déjà le pli !)
+            carte_jouee_gagne = (gagnant_pli(pli + [(joueur, c_jouee)], atout)[0] == joueur)
+            if top_gagne and not carte_jouee_gagne:
+                return f"Vous pouviez remporter le pli avec {top_c[0]}{top_c[1]} pour couper l'offensive adverse."
 
-    # Explication générale par défaut si aucun cas typique n'est isolé
-    if pts_jouee > pts_top:
-        return f"Économisez vos points : jouer {c_jouee[0]}{c_jouee[1]} coûte plus cher que {top_c[0]}{top_c[1]} sans apporter d'avantage sur ce pli."
-    
-    return f"Monte Carlo Enchères démontre que jouer {top_c[0]}{top_c[1]} offre une meilleure probabilité de remplir l'objectif de contrat sur l'ensemble des donnes simulées."
+            # Cadeau de points sur un pli perdu certain (en 4e position)
+            if len(pli) == 3 and pts_jouee >= 10 and pts_top < pts_jouee:
+                return f"Le pli est définitivement perdu au profit de l'adversaire : ne lui donnez pas {c_jouee[0]}{c_jouee[1]} ({pts_jouee} pts), sacrifiez une petite carte."
+
+    # Si aucune faute de doctrine n'est isolée : neutralité et humilité
+    return f"Vos cartes étaient d'une valeur très proche compte tenu des incertitudes de la donne. L'alternative {top_c[0]}{top_c[1]} obtient un léger avantage statistique sur les simulations."
 
 def evaluer_decision_carte(main, jouables, pli, contrat, joueur, carte_jouee, historique, encheres, regles):
     atout = contrat["atout"]
@@ -161,18 +155,18 @@ def evaluer_decision_carte(main, jouables, pli, contrat, joueur, carte_jouee, hi
         })
 
     explication = diagnostiquer_erreur(carte_jouee, top_carte, jouables, main, pli, contrat, joueur, historique)
-
-    if carte_jouee == top_carte or ecart_proba <= 0.03:
+    # SEUILS DE TOLÉRANCE RÉALISTES
+    if carte_jouee == top_carte or ecart_proba <= 0.05:
         apprec = ("Meilleur coup", "green", "🌟 Excellent choix")
     elif sont_equiv:
-        apprec = ("Meilleur coup", "green", f"🌟 Excellent choix (strictement équivalent à {top_carte[0]}{top_carte[1]})")
-        explication = f"Vous possédez les cartes maîtresses consécutives ({carte_jouee[0]} et {top_carte[0]} de {carte_jouee[1]}). Jouer l'une ou l'autre a exactement le même pouvoir de levée."
-    elif ecart_proba <= 0.10:
+        apprec = ("Meilleur coup", "green", f"🌟 Excellent choix (équivalent à {top_carte[0]}{top_carte[1]})")
+        explication = f"Vous possédez les cartes maîtresses consécutives ({carte_jouee[0]} et {top_carte[0]} de {carte_jouee[1]}). Jouer l'une ou l'autre est parfaitement équivalent."
+    elif ecart_proba <= 0.15:
         apprec = ("Solide", "blue", "👍 Coup solide")
-    elif ecart_proba <= 0.25:
+    elif ecart_proba <= 0.28:
         apprec = ("Imprécision", "orange", f"⚠️ Préférable : {top_carte[0]}{top_carte[1]}")
     else:
-        apprec = ("Erreur", "red", f"❌ Erreur (meilleur : {top_carte[0]}{top_carte[1]})")
+        apprec = ("Erreur", "red", f"❌ Erreur tactique (meilleur : {top_carte[0]}{top_carte[1]})")
 
     snapshot.update({
         "label": apprec[0],
@@ -187,47 +181,47 @@ def evaluer_decision_carte(main, jouables, pli, contrat, joueur, carte_jouee, hi
 import random
 from dispute import coherent
 from moteur import decompte, equipe_belote, RANGS
-
-def simuler_esperance_encheres(main_depart, encheres_partie, joueur_humain=0, nb_simuls=35):
-    """
-    Évalue par simulation l'espérance mathématique des options au moment 
-    de la dernière prise de décision de l'humain.
-    """
-    if not encheres_partie:
-        return None
-
-    # Retrouver le dernier moment où l'humain a parlé
-    idx_decision = -1
-    for idx, (j, d) in enumerate(encheres_partie):
-        if j == joueur_humain:
-            idx_decision = idx
-
-    if idx_decision == -1:
-        return None
-
-    encheres_jusqu_ici = encheres_partie[:idx_decision]
+def simuler_esperance_tour(main_depart, encheres_jusqu_ici, action_choisie, joueur_humain=0, nb_simuls=30):
+    """Calcule par Monte Carlo l'espérance des options à un tour précis des enchères."""
+    from regles import REGLES_STANDARD
+    regles = REGLES_STANDARD
     
-    # Identifier le contrat en cours au moment de décider
+    # Contrat en cours avant que l'humain ne parle à ce tour
     dernier_contrat = None
     for j, d in encheres_jusqu_ici:
         if isinstance(d, tuple):
             dernier_contrat = (j, d[0], d[1])
 
-    if dernier_contrat is None:
-        return None # Cas de l'ouverture pure
+    # Options à tester
+    options_a_tester = ["passe"]
+    est_adverse = False
+    
+    if dernier_contrat:
+        preneur_actuel, val_actuelle, coul_actuelle = dernier_contrat
+        est_adverse = (preneur_actuel % 2 != joueur_humain % 2)
+        if est_adverse:
+            options_a_tester.append("coinche")
+        palier_suivant = val_actuelle + 10
+        if palier_suivant <= 160:
+            coul_pref = max(COULEURS, key=lambda c: sum(1 for x in main_depart if x[1] == c))
+            options_a_tester.append((palier_suivant, coul_pref))
+            if coul_actuelle != coul_pref and (palier_suivant, coul_actuelle) not in options_a_tester:
+                options_a_tester.append((palier_suivant, coul_actuelle))
+    else:
+        # En ouverture : tester Passe et la meilleure couleur au niveau 80, 90, 100
+        coul_pref = max(COULEURS, key=lambda c: sum(1 for x in main_depart if x[1] == c))
+        for v in (80, 90, 100):
+            options_a_tester.append((v, coul_pref))
 
-    preneur_actuel, val_actuelle, coul_actuelle = dernier_contrat
-    est_adverse = (preneur_actuel % 2 != joueur_humain % 2)
-    from app import nom_joueur
-    nom_preneur = nom_joueur(preneur_actuel)
+    # Ajouter l'action réellement choisie si pas déjà dedans
+    if action_choisie not in options_a_tester:
+        options_a_tester.append(action_choisie)
 
-    from regles import REGLES_STANDARD
-    regles = REGLES_STANDARD
     autres = [p for p in range(4) if p != joueur_humain]
     inconnues = [(r, c) for c in COULEURS for r in RANGS if (r, c) not in main_depart]
     
     donnes_valides = []
-    for _ in range(2500):
+    for _ in range(2000):
         random.shuffle(inconnues)
         m = [None] * 4
         m[joueur_humain] = list(main_depart)
@@ -238,136 +232,69 @@ def simuler_esperance_encheres(main_depart, encheres_partie, joueur_humain=0, nb
             if len(donnes_valides) == nb_simuls:
                 break
 
-    if len(donnes_valides) < 10:
+    if len(donnes_valides) < 8:
         return None
 
     from dispute import JoueurDispute
     bot_simul = JoueurDispute()
-    bot_simul.encheres = list(encheres_partie)  # <--- Ajout de cette ligne
-    bilan = {}
+    bot_simul.encheres = list(encheres_jusqu_ici)
     eq_humain = joueur_humain % 2
+    bilan = {}
 
+    for opt in options_a_tester:
+        if opt == "passe":
+            if dernier_contrat is None:
+                bilan["Passe"] = 0.0
+                continue
+            c = {"valeur": val_actuelle, "atout": coul_actuelle, "joueur": preneur_actuel, "coinche": 0, "capot": False}
+            lbl = f"Passe ({val_actuelle} {coul_actuelle})"
+        elif opt == "coinche":
+            c = {"valeur": val_actuelle, "atout": coul_actuelle, "joueur": preneur_actuel, "coinche": 1, "capot": False}
+            lbl = f"Coinche ({val_actuelle} {coul_actuelle})"
+        elif isinstance(opt, tuple):
+            v, co = opt
+            est_capot = (v == regles["valeur_capot"])
+            c = {"valeur": v, "atout": co, "joueur": joueur_humain, "coinche": 0, "capot": est_capot}
+            lbl = f"{'Capot' if est_capot else v} {co}"
+        else:
+            continue
 
-    # 1. Option "PASSE"
-    label_passe = f"Passe (laisser jouer {val_actuelle} {coul_actuelle} par {nom_preneur})"
-    c_actuel = {"valeur": val_actuelle, "atout": coul_actuelle, "joueur": preneur_actuel, "coinche": 0, "capot": False}
-    gains_passe = []
-    for m in donnes_valides:
-        pts, plis, bel = bot_simul.jouer(m, c_actuel, regles)
-        s, _ = decompte(c_actuel, pts, plis, bel, regles)
-        gains_passe.append(s[eq_humain] - s[1 - eq_humain])
-    bilan[label_passe] = round(float(np.mean(gains_passe)), 1)
-
-    # 2. Option "COINCHER" (si adverse)
-    if est_adverse:
-        label_coinche = f"Coinche (sur {val_actuelle} {coul_actuelle})"
-        c_coinche = {"valeur": val_actuelle, "atout": coul_actuelle, "joueur": preneur_actuel, "coinche": 1, "capot": False}
-        gains_coinche = []
+        gains = []
         for m in donnes_valides:
-            pts, plis, bel = bot_simul.jouer(m, c_coinche, regles)
-            s, _ = decompte(c_coinche, pts, plis, bel, regles)
-            gains_coinche.append(s[eq_humain] - s[1 - eq_humain])
-        bilan[label_coinche] = round(float(np.mean(gains_coinche)), 1)
-
-    # 3. Option "SURENCHÉRIR"
-    palier_suivant = val_actuelle + 10
-    if palier_suivant <= 160:
-        coul_attaque = max(COULEURS, key=lambda c: sum(1 for x in main_depart if x[1] == c))
-        c_attaque = {"valeur": palier_suivant, "atout": coul_attaque, "joueur": joueur_humain, "coinche": 0, "capot": False}
-        gains_attaque = []
-        for m in donnes_valides:
-            pts, plis, bel = bot_simul.jouer(m, c_attaque, regles)
-            s, _ = decompte(c_attaque, pts, plis, bel, regles)
-            gains_attaque.append(s[eq_humain] - s[1 - eq_humain])
-        bilan[f"Surenchérir à {palier_suivant} {coul_attaque}"] = round(float(np.mean(gains_attaque)), 1)
+            pts, plis, bel = bot_simul.jouer(m, c, regles)
+            s, _ = decompte(c, pts, plis, bel, regles)
+            gains.append(s[eq_humain] - s[1 - eq_humain])
+        bilan[lbl] = round(float(np.mean(gains)), 1)
 
     return bilan
+
 
 def analyser_encheres_humain(main_depart, encheres_partie, joueur_humain=0):
     commentaires = []
     partenaire = (joueur_humain + 2) % 4
     
-    # Lister toutes les actions de l'humain dans la séquence
     actions_humain = [(idx, d) for idx, (j, d) in enumerate(encheres_partie) if j == joueur_humain]
     if not actions_humain:
         return ["ℹ️ Aucune action enregistrée."]
 
-    # 1. ANALYSE DU PREMIER TOUR DE PAROLE DE L'HUMAIN (Ouverture ou première réponse)
-    idx_premier, premier_choix = actions_humain[0]
-    
-    # Regarder ce qui s'était passé avant ce premier choix
-    encheres_avant = encheres_partie[:idx_premier]
-    ouverture_partenaire = next((d for j, d in encheres_avant if j == partenaire and isinstance(d, tuple)), None)
-    
-    # CAS A1 : Vous avez ouvert (personne n'avait ouvert dans votre camp)
-    if ouverture_partenaire is None:
-        couleur_recommandee = max(COULEURS, key=lambda c: niveau_v2(main_depart, c))
-        niveau_recommande = niveau_v2(main_depart, couleur_recommandee)
-
-        if niveau_recommande == 0:
-            if premier_choix == "passe":
-                commentaires.append("✅ **Tour 1 (Passe)** : Votre main ne justifiait pas d'ouvrir d'entrée.")
-            else:
-                commentaires.append(f"⚠️ **Tour 1 (Ouverture {premier_choix[0]} {premier_choix[1]})** : Audacieux. Selon les critères statistiques v2, votre main justifiait une passe.")
+    for tour_num, (idx_action, action) in enumerate(actions_humain, 1):
+        encheres_avant = encheres_partie[:idx_action]
+        action_nom = f"{action[0]} {action[1]}" if isinstance(action, tuple) else str(action).upper()
+        
+        commentaires.append(f"📍 **Tour {tour_num} : Vous avez choisi [{action_nom}]**")
+        
+        # Simulation MC à ce tour précis
+        bilan_tour = simuler_esperance_tour(main_depart, encheres_avant, action, joueur_humain)
+        if bilan_tour:
+            meilleure = max(bilan_tour, key=bilan_tour.get)
+            for opt, esp in bilan_tour.items():
+                etoile = " 🌟 (Optimal)" if opt == meilleure else ""
+                signe = "+" if esp > 0 else ""
+                commentaires.append(f"  • {opt} : **{signe}{esp} pts**{etoile}")
         else:
-            if premier_choix == "passe":
-                commentaires.append(f"⚠️ **Tour 1 (Passe)** : Occasion manquée. Vous pouviez ouvrir directement à **{niveau_recommande} {couleur_recommandee}** (réussite estimée ≥ 80 %).")
-            elif isinstance(premier_choix, tuple):
-                val, coul = premier_choix
-                if coul == couleur_recommandee and val == niveau_recommande:
-                    commentaires.append(f"🌟 **Tour 1 (Ouverture {val} {coul})** : Parfaitement calibrée selon le système recommandé.")
-                elif coul == couleur_recommandee and val < niveau_recommande:
-                    commentaires.append(f"ℹ️ **Tour 1 (Ouverture {val} {coul})** : Prudente. Vos cartes permettaient d'ouvrir à **{niveau_recommande} {coul}**.")
-                else:
-                    commentaires.append(f"⚠️ **Tour 1 (Ouverture {val} {coul})** : Prise de risque. Le système conseillait **{niveau_recommande} {coul}**.")
+            commentaires.append("  • (Situation standard évaluée selon la règle v2)")
 
-    # CAS A2 : Votre partenaire avait ouvert avant votre tour -> Votre premier choix était une réponse
-    else:
-        val_ouv, coul_ouv = ouverture_partenaire
-        from experience_reponse import reponse_variante
-        rep_fn = reponse_variante("court")
-        mon_inc = rep_fn(None, main_depart, val_ouv, coul_ouv)
-        
-        if premier_choix == "passe":
-            if mon_inc > 0:
-                commentaires.append(f"⚠️ **Tour 1 (Passe sur {val_ouv} {coul_ouv})** : Soutien manqué. Vous deviez remonter de +{mon_inc} ({val_ouv + mon_inc} {coul_ouv}).")
-            else:
-                commentaires.append(f"✅ **Tour 1 (Passe sur {val_ouv} {coul_ouv})** : Passe correcte (critères de soutien non atteints).")
-        elif isinstance(premier_choix, tuple):
-            val_h, coul_h = premier_choix
-            if coul_h == coul_ouv:
-                inc_h = val_h - val_ouv
-                if inc_h == mon_inc:
-                    commentaires.append(f"🌟 **Tour 1 (Soutien à {val_h} {coul_h})** : Réponse impeccable (+{inc_h}).")
-                elif inc_h < mon_inc:
-                    commentaires.append(f"ℹ️ **Tour 1 (Soutien à {val_h} {coul_h})** : Timide (+{inc_h}). Vous pouviez monter de +{mon_inc}.")
-                else:
-                    commentaires.append(f"⚠️ **Tour 1 (Soutien à {val_h} {coul_h})** : Optimiste (+{inc_h}). Le modèle recommandait +{mon_inc}.")
-
-    # 2. ANALYSE DU DERNIER TOUR DE PAROLE (Si vous avez parlé plusieurs fois)
-    if len(actions_humain) > 1:
-        idx_dernier, dernier_choix = actions_humain[-1]
-        dernier_contrat = next((d for j, d in reversed(encheres_partie[:idx_dernier]) if isinstance(d, tuple)), None)
-        
-        if dernier_contrat:
-            from app import nom_joueur
-            preneur_nom = nom_joueur(next(j for j, d in reversed(encheres_partie[:idx_dernier]) if isinstance(d, tuple)))
-            if dernier_choix == "passe":
-                commentaires.append(f"✅ **Tour 2 (Passe)** : Vous vous arrêtez sagement sur {dernier_contrat[0]} {dernier_contrat[1]} de {preneur_nom}.")
-            elif isinstance(dernier_choix, tuple):
-                commentaires.append(f"👉 **Tour 2 (Surenchère)** : Vous poussez à {dernier_choix[0]} {dernier_choix[1]}.")
-            elif dernier_choix == "coinche":
-                commentaires.append(f"🔥 **Tour 2 (Coinche)** : Vous coinchez l'adversaire !")
-
-    # 3. CALCUL D'ESPÉRANCE RÉELLE SUR VOTRE MAIN EXACTE (Simulation Monte Carlo)
-    bilan_simul = simuler_esperance_encheres(main_depart, encheres_partie, joueur_humain)
-    if bilan_simul:
-        commentaires.append("---")
-        commentaires.append("📊 **Calcul d'espérance réelle sur votre main exacte (Monte Carlo) :**")
-        meilleure_opt = max(bilan_simul, key=bilan_simul.get)
-        for opt, esp in bilan_simul.items():
-            etoile = " 🌟 (Optimal)" if opt == meilleure_opt else ""
-            signe = "+" if esp > 0 else ""
-            commentaires.append(f"• **{opt}** : gain espéré de **{signe}{esp} pts**{etoile}")
+        if tour_num < len(actions_humain):
+            commentaires.append("---")
 
     return commentaires

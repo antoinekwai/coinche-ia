@@ -3,9 +3,26 @@ from flask import Flask, render_template, jsonify, request
 from regles import REGLES_STANDARD
 from moteur import distribuer, cartes_jouables, gagnant_pli, points, equipe_belote, decompte
 from jouer import BotIA, trier_main
+from bot_mc_ia import BotMCIA
+from bot_coop import BotCoop
 from professeur import evaluer_decision_carte, analyser_encheres_humain
 
 app = Flask(__name__)
+
+# Grand Maître utilise le moteur d'élite BotMCIA
+class BotGrandMaitre(BotMCIA):
+    nom = "Grand Maître"
+
+def obtenir_bots(niveau):
+    if niveau == "coop":
+        return [None, BotCoop(), BotCoop(), BotCoop()]
+    elif niveau == "expert":
+        return [None, BotGrandMaitre(), BotGrandMaitre(), BotGrandMaitre()]
+    else:
+        return [None, BotIA(), BotIA(), BotIA()]
+
+BOTS = obtenir_bots("coop")
+
 
 PARTIE = {
     "scores": [0, 0],
@@ -46,7 +63,6 @@ PARTIE = {
     "info_pli_termine": None
 }
 
-BOTS = [None, BotIA(), BotIA(), BotIA()]
 
 def nom_joueur(j):
     return ["Vous (Sud)", "Ouest", "Partenaire (Nord)", "Est"][j]
@@ -141,7 +157,11 @@ def terminer_encheres():
     PARTIE["belote_equipe"] = equipe_belote(PARTIE["mains"], atout)
     PARTIE["joueur_belote"] = joueur_avec_belote(PARTIE["mains"], atout)
     PARTIE["belote_etape"] = 0
-    PARTIE["bulles"] = ["", "", "", ""]
+    # Conserver la bulle de coinche bien visible, effacer seulement les simples "Passe"
+    for k in range(4):
+        if "COINCHE" not in PARTIE["bulles"][k]:
+            PARTIE["bulles"][k] = ""
+
     PARTIE["tour"] = (PARTIE["donneur"] + 1) % 4
     c_nom = "CAPOT" if PARTIE["contrat"]["capot"] else PARTIE["contrat"]["valeur"]
     coinche_txt = " (COINCHÉ)" if PARTIE["contrat"]["coinche"] else ""
@@ -221,33 +241,24 @@ def cloturer_donne():
     PARTIE["scores"][1] += marque[1]
     PARTIE["etat"] = "debrief"
 
-    # Mise à jour des stats globales du match
-    sm = PARTIE["stats_match"]
+    # Mise à jour sécurisée des statistiques de match
+    sm = PARTIE.setdefault("stats_match", {
+        "donnes_jouees": 0, "contrats_pris": [0, 0], "contrats_reussis": [0, 0],
+        "coinches_reussies": 0, "total_coups_humain": 0, "coups_parfaits_humain": 0,
+        "erreurs_humain": 0, "total_encheres_humain": 0, "bonnes_encheres_humain": 0,
+        "chance_distribution_total": 0, "bad_beats": 0, "coups_de_chance": 0
+    })
+    
     sm["donnes_jouees"] += 1
     camp_preneur = PARTIE["contrat"]["joueur"] % 2
     sm["contrats_pris"][camp_preneur] += 1
     if reussi:
         sm["contrats_reussis"][camp_preneur] += 1
-    if PARTIE["contrat"]["coinche"] > 0 and not reussi:
+    if PARTIE["contrat"].get("coinche", 0) > 0 and not reussi:
         sm["coinches_reussies"] += 1
 
-    # Analyse des coups de l'humain sur cette donne
-    for item in PARTIE["debrief_carte"]:
-        if not item.get("est_force"):
-            sm["total_coups_humain"] += 1
-            if item.get("label") == "Meilleur coup":
-                sm["coups_parfaits_humain"] += 1
-            elif item.get("label") == "Erreur":
-                sm["erreurs_humain"] += 1
-    # Analyse des enchères de l'humain sur cette donne
-    PARTIE["debrief_encheres"] = analyser_encheres_humain(PARTIE["main_initiale_humain"], PARTIE["encheres"], 0)
-    for txt in PARTIE["debrief_encheres"]:
-        if "Tour " in txt:
-            sm["total_encheres_humain"] += 1
-            if "🌟" in txt or "✅" in txt:
-                sm["bonnes_encheres_humain"] += 1
-
-
+    # Bilan de la donne (toujours garanti pour la pop-up)
+    c_str = "CAPOT" if PARTIE["contrat"].get("capot") else PARTIE["contrat"]["valeur"]
     PARTIE["bilan_donne"] = {
         "pts_nous": PARTIE["pts_cartes"][0],
         "pts_eux": PARTIE["pts_cartes"][1],
@@ -258,26 +269,46 @@ def cloturer_donne():
         "marque_nous": marque[0],
         "marque_eux": marque[1],
         "preneur": nom_joueur(PARTIE["contrat"]["joueur"]),
-        "contrat_nom": f"{'CAPOT' if PARTIE['contrat']['capot'] else PARTIE['contrat']['valeur']} {PARTIE['contrat']['atout']}"
+        "contrat_nom": f"{c_str} {PARTIE['contrat']['atout']}"
     }
 
-    PARTIE["debrief_encheres"] = analyser_encheres_humain(PARTIE["main_initiale_humain"], PARTIE["encheres"], 0)
+    statut = "RÉUSSI" if reussi else "CHUTÉ"
+    PARTIE["message"] = f"Donne terminée ! Contrat {c_str} {PARTIE['contrat']['atout']} {statut}. Points : {PARTIE['pts_cartes'][0]} à {PARTIE['pts_cartes'][1]}."
 
-    # VÉRIFICATION DE FIN DE MATCH (1 000 points atteints)
+    # Analyse du Professeur en arrière-plan sécurisé
+    try:
+        PARTIE["debrief_encheres"] = analyser_encheres_humain(PARTIE["main_initiale_humain"], PARTIE["encheres"], 0)
+    except Exception as e:
+        print(f"Avertissement analyse enchères: {e}")
+        PARTIE["debrief_encheres"] = ["Analyse des enchères indisponible pour cette donne."]
+
+    # Calcul de chance sécurisé (anti-KeyError)
+    try:
+        from moteur import POINTS_ATOUT, POINTS_NON_ATOUT
+        atout = PARTIE["contrat"]["atout"]
+        pts_bruts_nous = sum(POINTS_ATOUT[r] if c == atout else POINTS_NON_ATOUT[r] 
+                             for p in (0, 2) for r, c in PARTIE["mains_initiales_toutes"][p])
+        ratio_donne = pts_bruts_nous / 152.0
+        sm["chance_distribution_total"] = sm.get("chance_distribution_total", 0.0) + ratio_donne
+        if camp_preneur == 0 and not reussi and PARTIE["contrat"]["valeur"] <= 100:
+            sm["bad_beats"] = sm.get("bad_beats", 0) + 1
+    except Exception as e:
+        print(f"Avertissement calcul chance: {e}")
+
+
+    # Vérification fin de match (1 000 points)
     obj = regles["score_objectif"]
     if max(PARTIE["scores"]) >= obj and PARTIE["scores"][0] != PARTIE["scores"][1]:
         PARTIE["match_termine"] = True
         victoire = (PARTIE["scores"][0] > PARTIE["scores"][1])
-        
-        # Calcul de précision Carte & Enchères
         prec_carte = 100 * sm["coups_parfaits_humain"] / max(1, sm["total_coups_humain"])
         prec_encheres = 100 * sm["bonnes_encheres_humain"] / max(1, sm["total_encheres_humain"])
+        prec_globale = (prec_carte * 0.6) + (prec_encheres * 0.4)
         
-        prec_globale = (prec_carte * 0.6) + (prec_encheres * 0.4) # Pondération équilibrée
-        if prec_globale >= 85: mention = "🌟 Niveau Grand Maître"
-        elif prec_globale >= 75: mention = "🎓 Niveau Joueur Expert"
-        elif prec_globale >= 60: mention = "👍 Niveau Joueur Solide"
-        else: mention = "📈 En progression"
+        mention = "🌟 Grand Maître" if prec_globale >= 85 else ("🎓 Expert" if prec_globale >= 75 else "👍 Solide")
+        chance_distrib = round(100 * sm.get("chance_distribution_total", 0.0) / max(1, sm["donnes_jouees"]), 1)
+ 
+        avis_chance = "🍀 Chanceux" if chance_distrib >= 53 else ("😾 Malchanceux" if chance_distrib <= 47 else "⚖️ Équilibré")
 
         PARTIE["bilan_match"] = {
             "victoire": victoire,
@@ -290,8 +321,12 @@ def cloturer_donne():
             "erreurs": sm["erreurs_humain"],
             "contrats_nous": f"{sm['contrats_reussis'][0]}/{sm['contrats_pris'][0]} réussis",
             "contrats_eux": f"{sm['contrats_reussis'][1]}/{sm['contrats_pris'][1]} réussis",
-            "coinches": sm["coinches_reussies"]
+            "chance_distrib": f"{chance_distrib} %",
+            "avis_chance": avis_chance,
+            "bad_beats": sm.get("bad_beats", 0)
+
         }
+
 
 
     c_str = "CAPOT" if PARTIE["contrat"]["capot"] else PARTIE["contrat"]["valeur"]
@@ -511,6 +546,10 @@ def route_rejouer_match():
         "coinches_reussies": 0,
         "total_coups_humain": 0,
         "coups_parfaits_humain": 0,
+        "chance_distribution_total": 0,
+        "bad_beats": 0,
+        "coups_de_chance": 0,
+
         "erreurs_humain": 0,
         "total_encheres_humain": 0,
         "bonnes_encheres_humain": 0

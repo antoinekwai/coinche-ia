@@ -47,13 +47,14 @@ def section_annonces(doc):
                "de l'ouverture à 90.")
 
     titre(doc, "Ce que rapportent les corrections", 2)
-    tableau(doc, ["Comparaison (jeu de la carte par simulation)", "Écart par donne"], [
-        ["Système corrigé contre système d'origine", "+7,4 ± 2,8"],
-        ["IA par apprentissage contre système d'origine", "+8,2 ± 2,9"],
-        ["IA par apprentissage contre système corrigé", "+0,8 ± 2,9 (pas de différence)"],
-        ["Ouvertures alignées sur les tableaux de mains (v2) contre système corrigé", "+1,5 ± 1,1"],
+    tableau(doc, ["Comparaison (jeu de la carte impartial par simulation)", "Écart par donne"], [
+        ["BILAN GLOBAL : Système Recommandé complet vs Système d'origine", "+13,2 ± 1,6 (prouvé)"],
+        ["Système corrigé initial contre système d'origine", "+7,4 ± 2,8"],
+        ["Ouvertures calibrées sur les mains types (v2) contre système corrigé", "+1,5 ± 1,1"],
         ["Réponse prudente sur 80 (0 ou 1 atout) contre réponse habituelle", "+2,1 ± 1,6"],
-    ], largeurs=[11, 5.5])
+        ["IA par apprentissage contre système recommandé", "+0,8 ± 2,9 (égalité parfaite)"],
+    ], largeurs=[11.5, 5.0])
+
 
     paragraphe(doc, "Les règles corrigées, applicables à la table, **font jeu égal avec l'IA**. "
                "Les principales corrections : ne plus ouvrir au 9 sans le valet avec un seul as, "

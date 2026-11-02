@@ -5,6 +5,41 @@ ORDRE_ATOUT_DESC = ["V", "9", "A", "10", "R", "D", "8", "7"]
 ORDRE_COULEUR_DESC = ["A", "10", "R", "D", "V", "9", "8", "7"]
 
 
+def evaluer_chute_contrat_mc(main, joueur, contrat, encheres, historique, regles, nb_simuls=25):
+    """
+    Simule nb_simuls donnes pour évaluer le pourcentage réel de chute du contrat adverse.
+    Utilise l'échantillonnage pur (donnes 100 % conformes aux annonces).
+    """
+    from test_mc_encheres import MCEncheres
+    from montecarlo import manques, simuler, contrat_reussi, belote_imaginee
+    
+    atout = contrat["atout"]
+    attaque = contrat["joueur"] % 2
+    eq_defense = joueur % 2
+    
+    bot_sim = MCEncheres()
+    bot_sim.historique = list(historique)
+    bot_sim.encheres = list(encheres)
+    manque = manques(historique, atout, regles)
+    
+    chutes = 0
+    donnes_testees = 0
+    
+    for _ in range(nb_simuls):
+        m_sim = bot_sim.imaginer(main, joueur, manque, atout)
+        bel = belote_imaginee(m_sim, historique, atout)
+        
+        # Simuler la donne complète
+        pts, plis = simuler(m_sim, [], contrat, (contrat["joueur"] + 1) % 4, None, 0, regles)
+        reussi = contrat_reussi(contrat, pts[attaque], plis[attaque], bel == attaque, regles)
+        
+        if not reussi:
+            chutes += 1
+        donnes_testees += 1
+        
+    return chutes / max(1, donnes_testees)
+
+
 def nb_atouts(main, a):
     return len([c for c in main if c[1] == a])
 
@@ -115,10 +150,27 @@ class JoueurSysteme(JoueurRegles):
         return increment_reponse(main, ouverture, a)
 
 
-    def veut_coincher(self, main, contrat):
+    def veut_coincher(self, main, contrat, regles=None):
         a = contrat["atout"]
-        return (("V", a) in main and nb_atouts(main, a) >= 3
-                and nb_as(main, a) >= 1 and contrat["valeur"] >= 100)
+        nb_atouts_main = sum(1 for c in main if c[1] == a)
+        
+        # 1. RÈGLE ABSOLUE : Jamais de coinche avec moins de 3 atouts en main !
+        if nb_atouts_main < 3:
+            return False
+
+        # 2. SIMULATION MONTE CARLO : Exiger au moins 80 % de chute
+        from regles import REGLES_STANDARD
+        r = regles or REGLES_STANDARD
+        
+        taux_chute = evaluer_chute_contrat_mc(
+            main, getattr(self, "moi", 0), contrat, 
+            getattr(self, "encheres", []), getattr(self, "historique", []), 
+            r, nb_simuls=25
+        )
+        
+        # Seuil d'exigence à 80 %
+        return taux_chute >= 0.80
+
 
     def annoncer(self, main, joueur, contrat, regles):
         moi = joueur % 2

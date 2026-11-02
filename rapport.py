@@ -6,6 +6,7 @@ from rapport_s4 import section_annonces
 from rapport_s5 import section_coinche, section_capot
 from rapport_s7 import section_carte, section_limites
 from rapport_s9 import section_bareme
+from rapport_s10 import section_simulateur
 from rapport_annexe import annexe_fiche
 
 if __name__ == "__main__":
@@ -20,6 +21,7 @@ if __name__ == "__main__":
     section_carte(doc)
     section_limites(doc)
     section_bareme(doc)
+    section_simulateur(doc) 
     doc.add_page_break() 
     annexe_fiche(doc)
     doc.save("rapport_coinche.docx")

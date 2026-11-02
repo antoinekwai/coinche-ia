@@ -151,18 +151,25 @@
             
             <div style="text-align:left; background:#111418; padding:12px; border-radius:8px; margin-bottom:18px; border:1px solid #333;">
                 <label style="font-size:12px; font-weight:bold; color:#74c69d; display:block; margin-bottom:6px;">Niveau des partenaires et adversaires :</label>
+                  <div style="margin-bottom:8px;">
+                    <label style="font-size:13px; cursor:pointer; display:flex; align-items:center; gap:8px;">
+                        <input type="radio" name="radio-level" value="normal">
+                        <span>⚡ <b>IA Classique</b> — Rapide, jeu fluide & entraîné</span>
+                    </label>
+                </div>
                 <div style="margin-bottom:8px;">
                     <label style="font-size:13px; cursor:pointer; display:flex; align-items:center; gap:8px;">
-                        <input type="radio" name="radio-level" value="normal" checked>
-                        <span>⚡ <b>IA Classique</b> — Rapide, jeu fluide & entraîné</span>
+                        <input type="radio" name="radio-level" value="expert">
+                        <span>🧠 <b>Grand Maître (MC-IA)</b> — Réflexion approfondie (~0.3s)</span>
                     </label>
                 </div>
                 <div>
                     <label style="font-size:13px; cursor:pointer; display:flex; align-items:center; gap:8px;">
-                        <input type="radio" name="radio-level" value="expert">
-                        <span>🧠 <b>Grand Maître (Monte Carlo)</b> — Réflexion approfondie (~1s)</span>
+                        <input type="radio" name="radio-level" value="coop" checked>
+                        <span>🤝 <b>Partenaire Coopératif (Bot-Coop)</b> — Écoute et émet les appels de défausses</span>
                     </label>
                 </div>
+
             </div>
 
             <button onclick="validerAccueilEtLancer()" style="width:100%; padding:14px; font-size:16px; background:#ffd166; color:#111; font-weight:bold; border:none; border-radius:8px; cursor:pointer;">
@@ -334,7 +341,12 @@
         let dernierPliCle = "";
         let modalDonneAffichee = false;
         let audioCtx = null;
-        let derniereAnnonceVocale = "";
+
+        // Drapeaux vocaux stricts : 1 seule fois par donne !
+        let coincheVocaleFaite = false;
+        let beloteVocaleFaite = false;
+        let rebeloteVocaleFaite = false;
+
 
         const CARD_BACK_URL = "https://deckofcardsapi.com/static/img/back.png";
 
@@ -371,6 +383,7 @@
         function speakVoice(text) {
             try {
                 if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel(); // Coupe immédiatement toute parole en cours !
                     const u = new SpeechSynthesisUtterance(text);
                     u.lang = 'fr-FR';
                     u.rate = 1.1;
@@ -378,6 +391,7 @@
                 }
             } catch(e) {}
         }
+
 
         function getCardImageUrl(r, c) {
             const rankMap = { 'A': 'A', '10': '0', 'V': 'J', 'D': 'Q', 'R': 'K', '7': '7', '8': '8', '9': '9' };
@@ -429,30 +443,38 @@
                 if (chip) chip.style.display = (etatJeu.donneur === i) ? 'inline-flex' : 'none';
             }
 
-            // Gestion des bulles & des voix
+             // Gestion des bulles visuelles
             for (let i = 0; i < 4; i++) {
                 const b = document.getElementById(`bubble-${i}`);
-                const texteBulle = etatJeu.bulles ? etatJeu.bulles[i] : "";
+                const texteBulle = (etatJeu.bulles && etatJeu.bulles[i]) ? etatJeu.bulles[i] : "";
                 
-                if (texteBulle && texteBulle !== "") {
+                if (texteBulle !== "") {
                     b.innerText = texteBulle;
                     b.className = "bubble" + (texteBulle.includes("Belote") ? " belote-badge" : "");
                     b.style.display = 'block';
-
-                    // Déclencheurs vocaux
-                    if (texteBulle !== derniereAnnonceVocale) {
-                        derniereAnnonceVocale = texteBulle;
-                        if (texteBulle.includes("COINCHE")) {
-                            speakVoice("Coinche !");
-                            declencherBandeauCoinche();
-                        } else if (texteBulle.includes("Belote")) {
-                            speakVoice("Belote !");
-                        } else if (texteBulle.includes("Rebelote")) {
-                            speakVoice("Rebelote !");
-                        }
-                    }
                 } else {
                     b.style.display = 'none';
+                }
+            }
+
+            // DÉCLENCHEURS VOCAUX UNIQUES (1 seule fois par événement)
+            if (etatJeu.bulles) {
+                const aCoinche = etatJeu.bulles.some(txt => txt && txt.includes("COINCHE"));
+                const aBelote = etatJeu.bulles.some(txt => txt && txt.includes("Belote !"));
+                const aRebelote = etatJeu.bulles.some(txt => txt && txt.includes("Rebelote !"));
+
+                if (aCoinche && !coincheVocaleFaite) {
+                    coincheVocaleFaite = true;
+                    declencherBandeauCoinche();
+                    speakVoice("Coinche !");
+                }
+                if (aBelote && !beloteVocaleFaite) {
+                    beloteVocaleFaite = true;
+                    speakVoice("Belote !");
+                }
+                if (aRebelote && !rebeloteVocaleFaite) {
+                    rebeloteVocaleFaite = true;
+                    speakVoice("Rebelote !");
                 }
             }
 
@@ -474,6 +496,8 @@
                 contractBadge.style.display = 'flex';
             } else {
                 contractBadge.style.display = 'none';
+            }
+
             }
 
             // Joueur actif
@@ -592,15 +616,20 @@
                     document.getElementById('match-title').style.color = bm.victoire ? '#74c69d' : '#e63946';
 
                     document.getElementById('match-summary-content').innerHTML = `
-                        <div class="score-row total"><span>Score :</span> <span>Vous ${bm.score_nous} — ${bm.score_eux} Eux</span></div>
-                        <div class="score-row"><span>Donnes :</span> <b>${bm.donnes}</b></div>
+                        <div class="score-row total"><span>Score final :</span> <span>Vous ${bm.score_nous} — ${bm.score_eux} Eux</span></div>
+                        <div class="score-row"><span>Donnes jouées :</span> <b>${bm.donnes}</b></div>
                         <div class="score-row"><span>Contrats (Vous) :</span> <b>${bm.contrats_nous}</b></div>
                         <div class="score-row"><span>Contrats (Eux) :</span> <b>${bm.contrats_eux}</b></div>
                         <hr style="border:0; border-top:1px solid #333; margin:6px 0;">
                         <div class="score-row" style="color:#74c69d;"><span>Précision Enchères :</span> <b>${bm.precision_encheres} %</b></div>
                         <div class="score-row" style="color:#ffd166;"><span>Précision Carte :</span> <b>${bm.precision_carte} %</b></div>
                         <div class="score-row" style="color:#2ec4b6;"><span>Appréciation :</span> <b>${bm.mention}</b></div>
+                        <hr style="border:0; border-top:1px solid #333; margin:6px 0;">
+                        <div style="font-size:11px; color:#adb5bd; margin-bottom:4px; font-weight:bold;">🍀 BAROMÈTRE DE CHANCE :</div>
+                        <div class="score-row"><span>Jeux reçus (Distribution) :</span> <b>${bm.chance_distrib} (${bm.avis_chance})</b></div>
+                        <div class="score-row"><span>Coups du sort défavorables :</span> <b>${bm.bad_beats} donne(s)</b></div>
                     `;
+
                 }
 
             } else {
@@ -612,12 +641,12 @@
                 pliSelectionne = null;
                 indexReplayPli = null;
             }
-        }
+        
 
         function declencherBandeauCoinche() {
             const banner = document.getElementById('alert-coinche-banner');
             banner.style.display = 'block';
-            setTimeout(() => { banner.style.display = 'none'; }, 2000);
+            setTimeout(() => { banner.style.display = 'none'; }, 2500);
         }
 
         function fermerModalDonneEtAnalyser() {
@@ -878,6 +907,11 @@
             pliSelectionne = null;
             dernierPliCle = "";
             modalDonneAffichee = false;
+              // Remise à zéro pour la nouvelle donne
+            coincheVocaleFaite = false;
+            beloteVocaleFaite = false;
+            rebeloteVocaleFaite = false;
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
 
             animerDistribution(async () => {
                 await fetch('/api/nouvelle_donne', { method: 'POST' });

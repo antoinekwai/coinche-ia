@@ -37,20 +37,19 @@ def section_carte(doc):
                "lire les enchères avec de mauvaises conventions ne coûte rien.")
 
     titre(doc, "Une IA qui a appris à jouer", 2)
-    paragraphe(doc, "Nous avons entraîné une IA à jouer la carte, d'abord seule contre elle-même, puis en "
-               "imitant le joueur par simulation. Voici ses progrès, mesurés contre le joueur à règles :")
-    tableau(doc, ["Étape", "Gain par donne"], [
-        ["Apprentissage seule, en jouant contre elle-même (une nuit)", "+7"],
-        ["Imitation du joueur par simulation", "+15"],
-        ["Imitation, en apprenant à comparer les cartes entre elles", "+20"],
-        ["Imitation du joueur qui lit les enchères (plus de données)", "+25"],
-    ], largeurs=[11, 5.5])
-    paragraphe(doc, "Elle joue désormais **au niveau du joueur par simulation**, à 2,5 points de sa "
-               "version qui lit les enchères, environ **25 fois plus vite**, ce qui a permis les "
-               "études détaillées ci-dessous. Le progrès le plus important n'est pas venu de données "
-               "supplémentaires, mais d'une **meilleure façon de poser la question** : au lieu de "
-               "prédire si le contrat allait passer, l'IA a appris à estimer de combien une carte "
-               "est meilleure qu'une autre.")
+    tableau(doc, ["Étape d'apprentissage de l'IA", "Gain vs joueur à règles"], [
+        ["1. Apprentissage seule en self-play (une nuit)", "+7"],
+        ["2. Imitation simple du joueur par simulation", "+15"],
+        ["3. Imitation avec apprentissage de l'avantage centré", "+20"],
+        ["4. Entraînement final (40 blocs avec inférence d'enchères & lissage)", "+25,4 ± 1,0"],
+    ], largeurs=[11.5, 5.0])
+    paragraphe(doc, "L'IA joue désormais à **égalité statistique avec le meilleur joueur de simulation "
+               "(−0,9 ± 1,6 pt)**, tout en calculant **25 fois plus vite** (11 secondes pour 20 000 donnes). "
+               "Un diagnostic détaillé sur 1 500 donnes en duplicate révèle que **l'IA gagne sur plus de "
+               "donnes que la simulation (286 donnes contre 250)** grâce à sa grande régularité sur les "
+               "contrats ordinaires ; l'écart restant en faveur de la simulation ne tient qu'à quelques "
+               "défenses chirurgicales sur de très gros contrats coinchés à 130 ou 140.")
+
 
     titre(doc, "Deux situations de table étudiées en détail", 2)
     paragraphe(doc, "Chaque donne a été jouée deux fois avec les mêmes cartes, en imposant une "

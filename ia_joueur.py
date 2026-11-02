@@ -108,7 +108,32 @@ class JoueurIA(SysV2):
         else:
             with torch.no_grad():
                 notes = charger(self.fichier)(torch.from_numpy(x)).squeeze(1).numpy()
+
+            # --- PRIOR D'INITIATIVE AU VALET ---
+            attaque = (contrat["joueur"] % 2 == joueur % 2)
+            if not pli and attaque and ("V", atout) in jouables:
+                # Vérifier s'il reste des atouts potentiellement chez l'adversaire
+                atouts_tombes = sum(1 for _, c in self.historique if c[1] == atout)
+                mes_atouts = sum(1 for c in main if c[1] == atout)
+                il_reste_des_atouts_dehors = (atouts_tombes + mes_atouts) < 8
+                
+                if il_reste_des_atouts_dehors:
+                    est_declarant = (contrat["joueur"] == joueur)
+                    a_le_9 = ("9", atout) in main
+                    
+                    # Le partenaire le joue TOUJOURS.
+                    # Le déclarant le joue s'il a du contrôle (>= 3 atouts ou le 9).
+                    if not est_declarant or mes_atouts >= 3 or a_le_9:
+                        idx_valet = jouables.index(("V", atout))
+                        notes[idx_valet] += 0.25
+
+
+
             k = int(notes.argmax())
+
+            # --- Harmonisation des cartes équivalentes ---
+            top_c = jouables[k]
+
 
             # --- Harmonisation des cartes équivalentes ---
             top_c = jouables[k]

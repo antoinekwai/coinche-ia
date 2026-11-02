@@ -14,9 +14,33 @@ class BotIA(JoueurIA):
 NOMS_JOUEURS = ["Vous (Sud)", "Ouest", "Partenaire (Nord)", "Est"]
 
 def trier_main(main, atout=None):
-    ordre_couleur = {"♠": 0, "♥": 1, "♣": 2, "♦": 3}
-    ordre_rang = {"7": 0, "8": 1, "9": 2, "10": 3, "V": 4, "D": 5, "R": 6, "A": 7}
-    return sorted(main, key=lambda c: (ordre_couleur.get(c[1], 9), ordre_rang.get(c[0], 0)))
+    """
+    Trie les cartes selon la vraie hiérarchie de la coinche :
+    - Atout en premier (V > 9 > A > 10 > R > D > 8 > 7)
+    - Autres couleurs alternées Noir/Rouge (A > 10 > R > D > V > 9 > 8 > 7)
+    """
+    if atout:
+        # Alterner les couleurs restantes pour ne pas coller Pique/Trèfle ou Cœur/Carreau
+        autres_noires = [c for c in ["♠", "♣"] if c != atout]
+        autres_rouges = [c for c in ["♥", "♦"] if c != atout]
+        
+        if atout in ["♠", "♣"]:
+            ordre_couleurs = [atout, autres_rouges[0], autres_noires[0], autres_rouges[1]]
+        else:
+            ordre_couleurs = [atout, autres_noires[0], autres_rouges[0], autres_noires[1]]
+    else:
+        ordre_couleurs = ["♠", "♥", "♣", "♦"]
+
+    ordre_atout = {"V": 0, "9": 1, "A": 2, "10": 3, "R": 4, "D": 5, "8": 6, "7": 7}
+    ordre_non_atout = {"A": 0, "10": 1, "R": 2, "D": 3, "V": 4, "9": 5, "8": 6, "7": 7}
+
+    def cle_tri(carte):
+        r, c = carte
+        coul_idx = ordre_couleurs.index(c) if c in ordre_couleurs else 9
+        rang_idx = ordre_atout[r] if (atout and c == atout) else ordre_non_atout[r]
+        return (coul_idx, rang_idx)
+
+    return sorted(main, key=cle_tri)
 
 def afficher_main_humain(main):
     cartes_triees = trier_main(main)

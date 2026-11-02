@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Galerie des Cartes Classiques</title>
+    <style>
+        body { background: #1b4332; color: #fff; font-family: sans-serif; padding: 25px; text-align: center; }
+        h1 { color: #ffd166; margin-bottom: 20px; }
+        .row { display: flex; justify-content: center; gap: 12px; margin-bottom: 25px; flex-wrap: wrap; }
+        .card-container { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        .card-img { width: 90px; height: 130px; border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); background: #fff; }
+        .card-back { width: 90px; height: 130px; border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+    </style>
+</head>
+<body>
+    <h1>Jeu de Cartes Officiel Français (SVG Vectoriel)</h1>
+    
+    <h2>1. Les Figures (Vrais portraits historiques)</h2>
+    <div class="row">
+        <div class="card-container">
+            <!-- Roi de Cœur -->
+            <img class="card-img" src="https://deckofcardsapi.com/static/img/KH.png" alt="Roi de Cœur">
+            <span>Roi de Cœur</span>
+        </div>
+        <div class="card-container">
+            <!-- Dame de Carreau -->
+            <img class="card-img" src="https://deckofcardsapi.com/static/img/QD.png" alt="Dame de Carreau">
+            <span>Dame de Carreau</span>
+        </div>
+        <div class="card-container">
+            <!-- Valet de Pique -->
+            <img class="card-img" src="https://deckofcardsapi.com/static/img/JS.png" alt="Valet de Pique">
+            <span>Valet de Pique (20 pts)</span>
+        </div>
+        <div class="card-container">
+            <!-- Valet de Trèfle -->
+            <img class="card-img" src="https://deckofcardsapi.com/static/img/JC.png" alt="Valet de Trèfle">
+            <span>Valet de Trèfle</span>
+        </div>
+    </div>
+
+    <h2>2. Les Chiffres (Vrais motifs complets avec le bon nombre de symboles)</h2>
+    <div class="row">
+        <div class="card-container">
+            <!-- 8 de Trèfle : 8 vrais trèfles -->
+            <img class="card-img" src="https://deckofcardsapi.com/static/img/8C.png" alt="8 de Trèfle">
+            <span>8 de Trèfle (8 symboles)</span>
+        </div>
+        <div class="card-container">
+            <!-- 9 de Pique : le 14 d'atout -->
+            <img class="card-img" src="https://deckofcardsapi.com/static/img/9S.png" alt="9 de Pique">
+            <span>9 de Pique (14 pts)</span>
+        </div>
+        <div class="card-container">
+            <!-- 10 de Carreau -->
+            <img class="card-img" src="https://deckofcardsapi.com/static/img/0D.png" alt="10 de Carreau">
+            <span>10 de Carreau (10 pts)</span>
+        </div>
+        <div class="card-container">
+            <!-- As de Cœur -->
+            <img class="card-img" src="https://deckofcardsapi.com/static/img/AH.png" alt="As de Cœur">
+            <span>As de Cœur (11 pts)</span>
+        </div>
+    </div>
+
+    <h2>3. Dos de Carte Classique (Adversaires)</h2>
+    <div class="row">
+        <div class="card-container">
+            <img class="card-back" src="https://deckofcardsapi.com/static/img/back.png" alt="Dos Bleu">
+            <span>Dos de Carte Officiel</span>
+        </div>
+    </div>
+</body>
+</html>
