@@ -1,8 +1,6 @@
-"""Liste, pour chaque classe de la chaîne, les fonctions qu'elle définit elle-même."""
 import os
-from bot_coop import BotCoop
-
-for k in BotCoop.__mro__:
+from jouer import BotIA
+for k in BotIA.__mro__:
     if k is object:
         continue
     fichier = os.path.basename(__import__(k.__module__).__file__)
