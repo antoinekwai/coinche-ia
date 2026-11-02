@@ -19,3 +19,8 @@ class BotMCIAv3(BotMCIA):
             return super().jouer_carte(main, jouables, pli, contrat, joueur, regles)
         finally:
             bot_mc_ia.imaginer_donnes_contraintes = ancien
+
+
+class BotMCIAv3x40(BotMCIAv3):
+    nom = "Bot-MC-IA v3 (40 sim.)"
+    nb_simulations = 40

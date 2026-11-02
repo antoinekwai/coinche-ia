@@ -6,7 +6,8 @@ Ne modifie rien.
 import ast
 import os
 
-POINTS_DE_DEPART = ["app.py", "benchmark_confirmation.py", "rapport.py", "jouer.py"]
+POINTS_DE_DEPART = ["app.py", "benchmark_confirmation.py", "rapport.py", "jouer.py",
+                    "ia_entrainer_mix3.py"]
 
 locaux = {f[:-3] for f in os.listdir(".") if f.endswith(".py")}
 
