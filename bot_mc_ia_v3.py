@@ -23,4 +23,7 @@ class BotMCIAv3(BotMCIA):
 
 class BotMCIAv3x40(BotMCIAv3):
     nom = "Bot-MC-IA v3 (40 sim.)"
-    nb_simulations = 40
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.nb_simulations = 40      # imposé APRÈS l'initialisation des parents
