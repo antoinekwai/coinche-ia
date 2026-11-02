@@ -3,7 +3,7 @@ import json
 import numpy as np
 
 donnes = []
-with open("resultats_benchmark_detective_v3.jsonl", encoding="utf-8") as f:
+with open("resultats_confirmation_v3.jsonl", encoding="utf-8") as f:
     for ligne in f:
         try:
             r = json.loads(ligne)
