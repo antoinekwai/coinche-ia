@@ -444,6 +444,17 @@ def route_jouer_carte():
         PARTIE["tour"] = 1
     return jsonify({"succes": True})
 
+@app.route("/api/changer_niveau_ia", methods=["POST"])
+def route_changer_niveau_ia():
+    global BOTS   # sans "global", Python créerait une variable locale et rien ne changerait
+    niveau = (request.json or {}).get("niveau", "coop")
+    if niveau not in ("normal", "expert", "coop"):
+        return jsonify({"erreur": f"Niveau inconnu : {niveau}"}), 400
+    BOTS = obtenir_bots(niveau)
+    PARTIE["niveau"] = niveau
+    print(f"Niveau des bots : {niveau}")
+    return jsonify({"succes": True, "niveau": niveau})
+
 @app.route("/api/nouvelle_donne", methods=["POST"])
 def route_nouvelle_donne():
     PARTIE["donneur"] = (PARTIE["donneur"] + 1) % 4
@@ -460,7 +471,9 @@ def route_export_donne():
     lignes.append("RAPPORT D'ANALYSE DE DONNE — COINCHE IA")
     lignes.append("=" * 60)
 
-    lignes.append(f"\nDonneur : {nom_joueur(PARTIE['donneur'])}")
+    noms_niveaux = {"normal": "IA Classique (BotIA)", "expert": "Grand Maître (BotMCIA)", "coop": "Bot-Coop"}
+    lignes.append(f"\nNiveau des bots : {noms_niveaux.get(PARTIE.get('niveau', 'coop'))}")
+    lignes.append(f"Donneur : {nom_joueur(PARTIE['donneur'])}")
     if PARTIE["contrat"]:
         c = PARTIE["contrat"]
         coinche_str = ["Non coinché", "COINCHÉ (x2)", "SURCOINCHÉ (x3)"][c.get("coinche", 0)]

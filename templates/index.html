@@ -498,8 +498,6 @@
                 contractBadge.style.display = 'none';
             }
 
-            }
-
             // Joueur actif
             for (let i = 0; i < 4; i++) {
                 const el = document.getElementById(`name-${i}`);
@@ -641,7 +639,7 @@
                 pliSelectionne = null;
                 indexReplayPli = null;
             }
-        
+        }
 
         function declencherBandeauCoinche() {
             const banner = document.getElementById('alert-coinche-banner');
@@ -928,11 +926,12 @@
         async function validerAccueilEtLancer() {
             getAudioContext();
             const niveau = document.querySelector('input[name="radio-level"]:checked').value;
-            await fetch('/api/changer_niveau_ia', {
+            const repNiveau = await fetch('/api/changer_niveau_ia', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ niveau })
             });
+            if (!repNiveau.ok) { alert("Le niveau n'a pas pu être changé (erreur " + repNiveau.status + ")."); }
             document.getElementById('modal-welcome').style.display = 'none';
             nouvelleDonne();
         }
