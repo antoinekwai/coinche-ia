@@ -278,9 +278,33 @@ def cloturer_donne():
     # Analyse du Professeur en arrière-plan sécurisé
     try:
         PARTIE["debrief_encheres"] = analyser_encheres_humain(PARTIE["main_initiale_humain"], PARTIE["encheres"], 0)
+        # Comptabilisation des bonnes enchères
+        for txt in PARTIE["debrief_encheres"]:
+            if "Vous avez choisi" in txt:
+                sm["total_encheres_humain"] = sm.get("total_encheres_humain", 0) + 1
+            if "🌟 (Optimal)" in txt:
+                sm["bonnes_encheres_humain"] = sm.get("bonnes_encheres_humain", 0) + 1
     except Exception as e:
         print(f"Avertissement analyse enchères: {e}")
         PARTIE["debrief_encheres"] = ["Analyse des enchères indisponible pour cette donne."]
+
+    # Enregistrement automatique de la donne en format standard JSONL
+    try:
+        import json
+        donne_rec = {
+            "donneur": PARTIE["donneur"],
+            "niveau_bot": PARTIE.get("niveau", "coop"),
+            "contrat": PARTIE["contrat"],
+            "encheres": PARTIE["encheres"],
+            "mains_depart": [[f"{r}{c}" for r, c in m] for m in PARTIE["mains_initiales_toutes"]],
+            "historique": [[j, f"{r}{c}"] for j, (r, c) in PARTIE["historique"]],
+            "bilan": PARTIE["bilan_donne"],
+            "scores": list(PARTIE["scores"])
+        }
+        with open("parties_humain.jsonl", "a", encoding="utf-8") as f_jsonl:
+            f_jsonl.write(json.dumps(donne_rec, ensure_ascii=False) + "\n")
+    except Exception as e:
+        print(f"Avertissement sauvegarde JSONL: {e}")
 
     # Calcul de chance sécurisé (anti-KeyError)
     try:
@@ -432,6 +456,18 @@ def route_jouer_carte():
     )
     if analyse:
         PARTIE["debrief_carte"].append(analyse)
+        if not analyse.get("est_force"):
+            sm = PARTIE.setdefault("stats_match", {})
+            sm["total_coups_humain"] = sm.get("total_coups_humain", 0) + 1
+            lbl = analyse.get("label", "")
+            if lbl == "Meilleur coup":
+                sm["coups_parfaits_humain"] = sm.get("coups_parfaits_humain", 0) + 1.0
+            elif lbl == "Solide":
+                sm["coups_parfaits_humain"] = sm.get("coups_parfaits_humain", 0) + 0.8
+            elif lbl == "Imprécision":
+                sm["coups_parfaits_humain"] = sm.get("coups_parfaits_humain", 0) + 0.4
+            elif lbl == "Erreur":
+                sm["erreurs_humain"] = sm.get("erreurs_humain", 0) + 1
 
     PARTIE["mains"][0].remove(carte)
     PARTIE["pli_en_cours"].append((0, carte))
