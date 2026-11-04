@@ -249,6 +249,8 @@ def simuler_esperance_tour(main_depart, encheres_jusqu_ici, action_choisie, joue
             c = {"valeur": val_actuelle, "atout": coul_actuelle, "joueur": preneur_actuel, "coinche": 0, "capot": False}
             lbl = f"Passe ({val_actuelle} {coul_actuelle})"
         elif opt == "coinche":
+            if dernier_contrat is None:
+                continue
             c = {"valeur": val_actuelle, "atout": coul_actuelle, "joueur": preneur_actuel, "coinche": 1, "capot": False}
             lbl = f"Coinche ({val_actuelle} {coul_actuelle})"
         elif isinstance(opt, tuple):

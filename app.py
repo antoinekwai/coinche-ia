@@ -278,12 +278,6 @@ def cloturer_donne():
     # Analyse du Professeur en arrière-plan sécurisé
     try:
         PARTIE["debrief_encheres"] = analyser_encheres_humain(PARTIE["main_initiale_humain"], PARTIE["encheres"], 0)
-        # Comptabilisation des bonnes enchères
-        for txt in PARTIE["debrief_encheres"]:
-            if "Vous avez choisi" in txt:
-                sm["total_encheres_humain"] = sm.get("total_encheres_humain", 0) + 1
-            if "🌟 (Optimal)" in txt:
-                sm["bonnes_encheres_humain"] = sm.get("bonnes_encheres_humain", 0) + 1
     except Exception as e:
         print(f"Avertissement analyse enchères: {e}")
         PARTIE["debrief_encheres"] = ["Analyse des enchères indisponible pour cette donne."]
@@ -325,11 +319,17 @@ def cloturer_donne():
     if max(PARTIE["scores"]) >= obj and PARTIE["scores"][0] != PARTIE["scores"][1]:
         PARTIE["match_termine"] = True
         victoire = (PARTIE["scores"][0] > PARTIE["scores"][1])
-        prec_carte = 100 * sm["coups_parfaits_humain"] / max(1, sm["total_coups_humain"])
-        prec_encheres = 100 * sm["bonnes_encheres_humain"] / max(1, sm["total_encheres_humain"])
-        prec_globale = (prec_carte * 0.6) + (prec_encheres * 0.4)
+        prec_carte = round(100.0 * sm.get("coups_parfaits_humain", 0.0) / max(1, sm.get("total_coups_humain", 0)), 1)
+        prec_globale = prec_carte
         
-        mention = "🌟 Grand Maître" if prec_globale >= 85 else ("🎓 Expert" if prec_globale >= 75 else "👍 Solide")
+        if prec_globale >= 85:
+            mention = "🌟 Grand Maître"
+        elif prec_globale >= 70:
+            mention = "🎓 Expert"
+        elif prec_globale >= 55:
+            mention = "👍 Solide"
+        else:
+            mention = "📚 En apprentissage" 
         chance_distrib = round(100 * sm.get("chance_distribution_total", 0.0) / max(1, sm["donnes_jouees"]), 1)
  
         avis_chance = "🍀 Chanceux" if chance_distrib >= 53 else ("😾 Malchanceux" if chance_distrib <= 47 else "⚖️ Équilibré")
@@ -339,8 +339,8 @@ def cloturer_donne():
             "score_nous": PARTIE["scores"][0],
             "score_eux": PARTIE["scores"][1],
             "donnes": sm["donnes_jouees"],
-            "precision_carte": round(prec_carte, 1),
-            "precision_encheres": round(prec_encheres, 1),
+            "precision_carte": f"{prec_carte} %",
+            "precision_encheres": "-- (en calibration)", 
             "mention": mention,
             "erreurs": sm["erreurs_humain"],
             "contrats_nous": f"{sm['contrats_reussis'][0]}/{sm['contrats_pris'][0]} réussis",
