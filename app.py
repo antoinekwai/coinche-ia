@@ -4,14 +4,15 @@ from regles import REGLES_STANDARD
 from moteur import distribuer, cartes_jouables, gagnant_pli, points, equipe_belote, decompte
 from jouer import BotIA, trier_main
 from bot_mc_ia import BotMCIA
+from bot_mc_ia_v5 import BotMCIAv5
 from bot_coop import BotCoop
 from professeur import evaluer_decision_carte, analyser_encheres_humain
 
 app = Flask(__name__)
 
-# Grand Maître utilise le moteur d'élite BotMCIA
-class BotGrandMaitre(BotMCIA):
-    nom = "Grand Maître"
+# Grand Maître utilise notre nouveau champion officiel : BotMCIAv5 (Hybride P1-3 IA, P4-8 MC 40s)
+class BotGrandMaitre(BotMCIAv5):
+    nom = "Grand Maître (v5 Hybride)"
 
 def obtenir_bots(niveau):
     if niveau == "coop":
@@ -507,7 +508,7 @@ def route_export_donne():
     lignes.append("RAPPORT D'ANALYSE DE DONNE — COINCHE IA")
     lignes.append("=" * 60)
 
-    noms_niveaux = {"normal": "IA Classique (BotIA)", "expert": "Grand Maître (BotMCIA)", "coop": "Bot-Coop"}
+    noms_niveaux = {"normal": "IA Classique (BotIA)", "expert": "Grand Maître (v5 Hybride 40s)", "coop": "Bot-Coop"}
     lignes.append(f"\nNiveau des bots : {noms_niveaux.get(PARTIE.get('niveau', 'coop'))}")
     lignes.append(f"Donneur : {nom_joueur(PARTIE['donneur'])}")
     if PARTIE["contrat"]:
