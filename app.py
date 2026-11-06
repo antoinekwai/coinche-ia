@@ -5,9 +5,10 @@ import uuid
 from flask import Flask, render_template, jsonify, request, session
 from regles import REGLES_STANDARD
 from moteur import distribuer, cartes_jouables, gagnant_pli, points, equipe_belote, decompte
-from jouer import BotIA, trier_main
+from jouer import trier_main
 from bot_mc_ia import BotMCIA
-from bot_mc_ia_v5 import BotMCIAv5
+from bot_mc_ia_v6 import BotMCIAv6, FICHIER_V6_RESEAU
+from ia_modele_v2 import JoueurIA_V2
 from bot_coop import BotCoop
 from professeur import evaluer_decision_carte, analyser_encheres_humain
 
@@ -15,15 +16,16 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "coinche-cle-secrete-production-2026")
 
 
-# Grand Maître utilise notre champion officiel : BotMCIAv5 (Hybride P1-3 IA, P4-8 MC 40s)
-class BotGrandMaitre(BotMCIAv5):
-    nom = "Grand Maître (v5 Hybride)"
+# Grand Maître utilise notre champion officiel : BotMCIAv6 (Réseau V2 + MC 40s)
+class BotGrandMaitre(BotMCIAv6):
+    nom = "Grand Maître (v6 Réseau V2)"
 
 
 def obtenir_bots(niveau):
     if niveau == "normal":
-        return [None, BotIA(), BotIA(), BotIA()]
-    # Niveau par défaut : notre champion officiel Grand Maître v5
+        # IA Rapide utilise nativement le Réseau V2 champion (324 entrées)
+        return [None, JoueurIA_V2(fichier=FICHIER_V6_RESEAU), JoueurIA_V2(fichier=FICHIER_V6_RESEAU), JoueurIA_V2(fichier=FICHIER_V6_RESEAU)]
+    # Grand Maître par défaut : BotMCIAv6
     return [None, BotGrandMaitre(), BotGrandMaitre(), BotGrandMaitre()]
 
 
@@ -570,8 +572,8 @@ def route_export_donne():
     ]
 
     noms_niveaux = {
-        "normal": "IA Classique (BotIA)",
-        "expert": "Grand Maître (v5 Hybride 40s)",
+        "normal": "IA Rapide (Réseau V2)",
+        "expert": "Grand Maître (v6 Hybride V2 40s)",
         "coop": "Bot-Coop"
     }
     lignes.append(f"\nNiveau des bots : {noms_niveaux.get(data.get('niveau', 'coop'))}")
