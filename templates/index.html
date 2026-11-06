@@ -38,6 +38,66 @@
 
         .middle-row { display: flex; width: 100%; justify-content: space-between; align-items: center; flex: 1; padding: 0 10px; }
         
+        
+        /* VIGNETTE DERNIER PLI EN CROIX DANS LE COIN DU TAPIS */
+        #last-trick-widget { 
+            position: absolute; top: 56px; left: 16px; 
+            background: rgba(10, 14, 20, 0.88); 
+            border: 1.5px solid rgba(255, 209, 102, 0.5); 
+            border-radius: 12px; padding: 6px 8px; 
+            display: none; flex-direction: column; align-items: center; 
+            z-index: 25; backdrop-filter: blur(6px); 
+            box-shadow: 0 6px 18px rgba(0,0,0,0.6); 
+            cursor: pointer; transition: transform 0.15s ease, border-color 0.15s ease; 
+        }
+        #last-trick-widget:hover { transform: scale(1.06); border-color: #ffd166; box-shadow: 0 8px 22px rgba(255, 209, 102, 0.3); }
+        #last-trick-title { font-size: 10px; font-weight: bold; color: #ffd166; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        /* MINI TAPIS EN CROIX (4 POINTS CARDINAUX) */
+        .mini-cross-tapis { 
+            position: relative; width: 78px; height: 68px; 
+            background: rgba(27, 67, 50, 0.7); 
+            border-radius: 8px; border: 1px dashed rgba(255,255,255,0.25); 
+        }
+        .mini-card-cross { 
+            position: absolute; width: 22px; height: 32px; 
+            border-radius: 3px; box-shadow: 0 2px 5px rgba(0,0,0,0.7); 
+            border: 1px solid #fff; object-fit: fill; 
+        }
+        .mini-card-cross.c-south { bottom: 2px; left: 50%; transform: translateX(-50%); }
+        .mini-card-cross.c-north { top: 2px; left: 50%; transform: translateX(-50%); }
+        .mini-card-cross.c-west  { left: 3px; top: 50%; transform: translateY(-50%); }
+        .mini-card-cross.c-east  { right: 3px; top: 50%; transform: translateY(-50%); }
+        .mini-card-cross.winner-border { border: 2px solid #ffd166; box-shadow: 0 0 8px #ffd166; z-index: 5; }
+
+        /* MODAL DE ZOOM DU DERNIER PLI */
+        #modal-zoom-trick { 
+            display: none; position: fixed; inset: 0; 
+            background: rgba(0,0,0,0.85); z-index: 300; 
+            align-items: center; justify-content: center; 
+            backdrop-filter: blur(5px); 
+        }
+        .zoom-box { 
+            background: #1a1e24; border: 2px solid #ffd166; 
+            border-radius: 16px; padding: 22px; 
+            display: flex; flex-direction: column; align-items: center; 
+            box-shadow: 0 12px 35px rgba(0,0,0,0.9); max-width: 420px; width: 90%; 
+        }
+        .zoom-tapis { 
+            position: relative; width: 260px; height: 210px; 
+            background: radial-gradient(circle, #2d6a4f 0%, #1b4332 80%); 
+            border-radius: 14px; border: 2px solid rgba(255,255,255,0.2); 
+            margin: 15px 0; 
+        }
+        .zoom-card-wrap { position: absolute; display: flex; flex-direction: column; align-items: center; }
+        .zoom-card-wrap img { width: 56px; height: 82px; border-radius: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); border: 1.5px solid #fff; }
+        .zoom-card-wrap.winner-card img { border: 3px solid #ffd166; box-shadow: 0 0 14px #ffd166; }
+        .zoom-card-wrap span { font-size: 11px; margin-top: 3px; background: rgba(0,0,0,0.75); padding: 2px 6px; border-radius: 4px; }
+        .zoom-south { bottom: 6px; left: 50%; transform: translateX(-50%); }
+        .zoom-north { top: 6px; left: 50%; transform: translateX(-50%); }
+        .zoom-west  { left: 8px; top: 50%; transform: translateY(-50%); }
+        .zoom-east  { right: 8px; top: 50%; transform: translateY(-50%); }
+
         /* DOS DE CARTES */
         .card-back-wrap { width: 44px; height: 64px; border-radius: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.4); overflow: hidden; background: #fff; }
         .card-back-img { width: 100%; height: 100%; object-fit: fill; display: block; }
@@ -52,7 +112,16 @@
 
         /* PLI CENTRAL */
         #center-trick { width: 330px; height: 250px; background: rgba(0,0,0,0.25); border-radius: 20px; border: 2px dashed rgba(255,255,255,0.2); position: relative; }
-        .trick-card { position: absolute; display: flex; flex-direction: column; align-items: center; }
+        .trick-card { position: absolute; display: flex; flex-direction: column; align-items: center; transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1); }
+        .trick-card.pos-south { animation: slideFromSouth 0.25s ease-out; }
+        .trick-card.pos-west  { animation: slideFromWest 0.25s ease-out; }
+        .trick-card.pos-north { animation: slideFromNorth 0.25s ease-out; }
+        .trick-card.pos-east  { animation: slideFromEast 0.25s ease-out; }
+
+        @keyframes slideFromSouth { 0% { transform: translate(-50%, 40px) scale(0.9); opacity: 0; } 100% { transform: translate(-50%, 0) scale(1); opacity: 1; } }
+        @keyframes slideFromWest  { 0% { transform: translate(-40px, -50%) scale(0.9); opacity: 0; } 100% { transform: translate(0, -50%) scale(1); opacity: 1; } }
+        @keyframes slideFromNorth { 0% { transform: translate(-50%, -40px) scale(0.9); opacity: 0; } 100% { transform: translate(-50%, 0) scale(1); opacity: 1; } }
+        @keyframes slideFromEast  { 0% { transform: translate(40px, -50%) scale(0.9); opacity: 0; } 100% { transform: translate(0, -50%) scale(1); opacity: 1; } }
         .trick-card span { font-size: 10px; margin-top: 3px; background: rgba(0,0,0,0.7); padding: 1px 5px; border-radius: 4px; }
 
         .pos-south { bottom: 8px; left: 50%; transform: translateX(-50%); }
@@ -68,17 +137,35 @@
         #replay-bar button { padding: 4px 10px; font-size: 12px; background: #2ec4b6; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
 
         /* CARTES DU JOUEUR (GRANDES & SURVOL FLUIDE) */
-        .hand { display: flex; gap: 10px; justify-content: center; }
+        .hand { display: flex; justify-content: center; align-items: flex-end; padding-top: 25px; }
         
-        .card-wrap { width: 84px; height: 122px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.35); user-select: none; position: relative; background: #fff; transition: transform 0.16s ease-out, box-shadow 0.16s ease-out; }
-        .card-wrap img { width: 100%; height: 100%; border-radius: 6px; display: block; object-fit: fill; pointer-events: none; }
+        /* CARTES EN ÉVENTAIL AVEC CHEVAUCHEMENT */
+        .card-wrap { 
+            width: 92px; 
+            height: 134px; 
+            border-radius: 7px; 
+            box-shadow: -2px 4px 12px rgba(0,0,0,0.5); 
+            user-select: none; 
+            position: relative; 
+            background: #fff; 
+            transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.4, 1.2), box-shadow 0.18s ease-out, z-index 0s; 
+            margin-left: -32px; /* Chevauchement de 32px */
+        }
+        .card-wrap:first-child { margin-left: 0; }
+        .card-wrap img { width: 100%; height: 100%; border-radius: 7px; display: block; object-fit: fill; pointer-events: none; }
         
-        .card-wrap.mini { width: 34px; height: 48px; border-radius: 3px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        .card-wrap.mini { width: 34px; height: 48px; border-radius: 3px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); margin-left: 0; }
         .card-wrap.mini img { border-radius: 3px; }
         
-        .card-wrap.is-trump { box-shadow: 0 0 10px rgba(255, 209, 102, 0.7); }
-        .card-wrap.playable { cursor: pointer; outline: 3px solid #ffd166; box-shadow: 0 0 14px #ffd166; }
-        .card-wrap.playable:hover { transform: translateY(-8px); box-shadow: 0 6px 18px rgba(255, 209, 102, 0.9); }
+        .card-wrap.is-trump { box-shadow: -2px 4px 12px rgba(0,0,0,0.5), 0 0 12px rgba(255, 209, 102, 0.8); }
+        .card-wrap.playable { cursor: pointer; outline: 3px solid #ffd166; }
+        
+        /* AU SURVOL : LA CARTE SE DÉGAGE DE L'ÉVENTAIL AU PREMIER PLAN */
+        .card-wrap.playable:hover { 
+            transform: translateY(-22px) scale(1.08); 
+            z-index: 60 !important; 
+            box-shadow: 0 14px 28px rgba(0,0,0,0.8), 0 0 18px #ffd166; 
+        }
 
         /* ENCHERES */
         #bid-controls { background: rgba(0,0,0,0.92); padding: 8px 14px; border-radius: 12px; display: flex; gap: 8px; align-items: center; margin-bottom: 6px; border: 1px solid #ffd166; z-index: 30; }
@@ -123,16 +210,18 @@
 
         /* DISTRIBUTION ANIMÉE */
         #deal-animation-stage { display: none; position: absolute; inset: 0; z-index: 100; pointer-events: none; overflow: hidden; }
-        .deck-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 50px; height: 72px; background: #1d3557; border: 2px solid #fff; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
-        .flying-card-anim { position: absolute; width: 44px; height: 64px; border-radius: 4px; background: #1d3557; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.4); top: 50%; left: 50%; transform: translate(-50%, -50%); transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1); opacity: 0; }
+        .deck-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 48px; height: 70px; border-radius: 5px; box-shadow: 0 8px 25px rgba(0,0,0,0.8); overflow: hidden; border: 1px solid #fff; }
+        .deck-center img { width: 100%; height: 100%; object-fit: cover; }
+        .flying-card-anim { position: absolute; width: 46px; height: 68px; border-radius: 5px; box-shadow: 0 6px 16px rgba(0,0,0,0.6); top: 50%; left: 50%; transform: translate(-50%, -50%); transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1); opacity: 0; overflow: hidden; border: 1px solid #fff; }
+        .flying-card-anim img { width: 100%; height: 100%; object-fit: cover; }
 
         /* MOBILE */
         @media (max-width: 850px) {
             body { flex-direction: column; height: auto; overflow-y: auto; }
             #table-container { height: 100vh; min-height: 540px; padding: 6px; }
-            .card-wrap { width: 44px; height: 64px; }
-            .card-wrap.playable:hover { transform: translateY(-4px); }
-            .hand { gap: 2px; }
+            .card-wrap { width: 62px; height: 90px; margin-left: -24px; }
+            .card-wrap.playable:hover { transform: translateY(-16px) scale(1.08); z-index: 60 !important; }
+            .hand { padding-top: 18px; }
             #professor-panel { width: 100%; border-left: none; border-top: 3px solid #2d6a4f; min-height: 400px; padding: 12px; }
             .btn-sticky-container { position: relative; bottom: 0; margin: 12px 0 0 0; padding: 0; border: none; }
         }
@@ -151,22 +240,16 @@
             
             <div style="text-align:left; background:#111418; padding:12px; border-radius:8px; margin-bottom:18px; border:1px solid #333;">
                 <label style="font-size:12px; font-weight:bold; color:#74c69d; display:block; margin-bottom:6px;">Niveau des partenaires et adversaires :</label>
-                  <div style="margin-bottom:8px;">
+                <div style="margin-bottom:10px;">
                     <label style="font-size:13px; cursor:pointer; display:flex; align-items:center; gap:8px;">
-                        <input type="radio" name="radio-level" value="normal">
-                        <span>⚡ <b>IA Classique</b> — Rapide, jeu fluide & entraîné</span>
-                    </label>
-                </div>
-                <div style="margin-bottom:8px;">
-                    <label style="font-size:13px; cursor:pointer; display:flex; align-items:center; gap:8px;">
-                        <input type="radio" name="radio-level" value="expert">
-                        <span>🧠 <b>Grand Maître (MC-IA)</b> — Réflexion approfondie (~0.3s)</span>
+                        <input type="radio" name="radio-level" value="expert" checked>
+                        <span>🧠 <b>Grand Maître (v5 Hybride)</b> — Réflexion approfondie & champion officiel</span>
                     </label>
                 </div>
                 <div>
                     <label style="font-size:13px; cursor:pointer; display:flex; align-items:center; gap:8px;">
-                        <input type="radio" name="radio-level" value="coop" checked>
-                        <span>🤝 <b>Partenaire Coopératif (Bot-Coop)</b> — Écoute et émet les appels de défausses</span>
+                        <input type="radio" name="radio-level" value="normal">
+                        <span>⚡ <b>IA Rapide</b> — Jeu instantané (réseau neuronal pur)</span>
                     </label>
                 </div>
 
@@ -199,6 +282,30 @@
 
     <!-- TAPIS VERT -->
     <div id="table-container">
+        <!-- VIGNETTE DERNIER PLI EN CROIX DANS LE COIN -->
+        <div id="last-trick-widget" onclick="ouvrirZoomDernierPli()" title="Cliquez pour agrandir le dernier pli">
+            <div id="last-trick-title">👁️ Pli précédent</div>
+            <div class="mini-cross-tapis" id="mini-cross-container">
+                <!-- 4 mini cartes aux points cardinaux -->
+            </div>
+            <div id="last-trick-winner" style="font-size:10px; color:#74c69d; margin-top:4px; font-weight:bold;"></div>
+        </div>
+
+        <!-- MODAL GRAND ZOOM DU DERNIER PLI -->
+        <div id="modal-zoom-trick" onclick="fermerZoomDernierPli()">
+            <div class="zoom-box" onclick="event.stopPropagation()">
+                <div style="font-size:18px; font-weight:bold; color:#ffd166;">🔍 Dernier Pli Joué</div>
+                <div id="zoom-trick-summary" style="font-size:12px; color:#ced4da; margin-top:4px;"></div>
+                
+                <div class="zoom-tapis" id="zoom-tapis-content">
+                    <!-- Cartes agrandies aux 4 points cardinaux -->
+                </div>
+
+                <button onclick="fermerZoomDernierPli()" style="padding:8px 24px; font-size:13px; background:#495057; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
+                    ✕ Fermer
+                </button>
+            </div>
+        </div>
         <!-- DISTRIBUTION ANIMÉE -->
         <div id="deal-animation-stage">
             <div class="deck-center"></div>
@@ -362,20 +469,48 @@
         }
 
         // Bruitage synthétique de carte posée
+        // Son réaliste d'impact de carte sur feutre (déclenché à l'impact exact !)
         function playCardSound() {
             try {
                 const ctx = getAudioContext();
+                if (ctx.state === 'suspended') ctx.resume();
+
+                // Double composante : un clic court + une résonance feutrée
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.type = 'triangle';
-                osc.frequency.setValueAtTime(180, ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.08);
-                gain.gain.setValueAtTime(0.3, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+                osc.frequency.setValueAtTime(220, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.06);
+
+                gain.gain.setValueAtTime(0.35, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+
                 osc.connect(gain);
                 gain.connect(ctx.destination);
                 osc.start();
-                osc.stop(ctx.currentTime + 0.08);
+                osc.stop(ctx.currentTime + 0.06);
+            } catch(e) {}
+        }
+
+        // Son de froissement / volée de distribution
+        function playDealSwooshSound() {
+            try {
+                const ctx = getAudioContext();
+                if (ctx.state === 'suspended') ctx.resume();
+
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(320, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 0.12);
+
+                gain.gain.setValueAtTime(0.18, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.12);
             } catch(e) {}
         }
 
@@ -392,6 +527,19 @@
             } catch(e) {}
         }
 
+
+        // Pré-chargement en cache des 32 cartes (zéro face blanche !)
+        function prechargerImagesCartes() {
+            const rangs = ['A', '10', 'R', 'D', 'V', '9', '8', '7'];
+            const couleurs = ['♠', '♥', '♦', '♣'];
+            rangs.forEach(r => {
+                couleurs.forEach(c => {
+                    const img = new Image();
+                    img.src = getCardImageUrl(r, c);
+                });
+            });
+        }
+        window.addEventListener('DOMContentLoaded', prechargerImagesCartes);
 
         function getCardImageUrl(r, c) {
             const rankMap = { 'A': 'A', '10': '0', 'V': 'J', 'D': 'Q', 'R': 'K', '7': '7', '8': '8', '9': '9' };
@@ -424,7 +572,44 @@
             return html;
         }
 
+        let distributionEnCours = false;
+
+        
+        function ouvrirZoomDernierPli() {
+            const pInfo = etatJeu.dernier_pli_info;
+            if (!pInfo || !pInfo.cartes) return;
+
+            const modal = document.getElementById('modal-zoom-trick');
+            const summary = document.getElementById('zoom-trick-summary');
+            const tapis = document.getElementById('zoom-tapis-content');
+
+            summary.innerText = `Remporté par ${pInfo.gagnant} avec ${pInfo.carte_gagnante}`;
+
+            const noms = ["Vous (Sud)", "Ouest", "Partenaire (Nord)", "Est"];
+            const posZoomMap = { 0: 'zoom-south', 1: 'zoom-west', 2: 'zoom-north', 3: 'zoom-east' };
+
+            tapis.innerHTML = pInfo.cartes.map(([nomJ, cStr]) => {
+                const jIdx = noms.indexOf(nomJ);
+                const posCls = posZoomMap[jIdx] || 'zoom-south';
+                const isWinner = (nomJ === pInfo.gagnant) ? 'winner-card' : '';
+                const r = cStr.slice(0, -1), coul = cStr.slice(-1);
+                return `
+                    <div class="zoom-card-wrap ${posCls} ${isWinner}">
+                        <img src="${getCardImageUrl(r, coul)}" alt="${cStr}">
+                        <span>${nomJ}</span>
+                    </div>
+                `;
+            }).join('');
+
+            modal.style.display = 'flex';
+        }
+
+        function fermerZoomDernierPli() {
+            document.getElementById('modal-zoom-trick').style.display = 'none';
+        }
+
         async function actualiser() {
+            if (distributionEnCours) return; // Verrou anti-collision : ne pas toucher à l'écran pendant la distribution !
             try {
                 const res = await fetch('/api/etat');
                 etatJeu = await res.json();
@@ -498,6 +683,30 @@
                 contractBadge.style.display = 'none';
             }
 
+            
+            // Mise à jour du widget Dernier Pli dans le coin
+            const lastWidget = document.getElementById('last-trick-widget');
+            const pInfo = etatJeu.dernier_pli_info;
+            if (pInfo && pInfo.cartes && pInfo.cartes.length === 4 && (etatJeu.etat === 'jeu' || etatJeu.etat === 'pli_termine')) {
+                lastWidget.style.display = 'flex';
+                document.getElementById('last-trick-winner').innerText = `🏆 ${pInfo.gagnant.replace(' (Sud)', '').replace(' (Nord)', '')}`;
+                
+                // Positionnement des 4 mini cartes aux points cardinaux
+                const noms = ["Vous (Sud)", "Ouest", "Partenaire (Nord)", "Est"];
+                const posClassMap = { 0: 'c-south', 1: 'c-west', 2: 'c-north', 3: 'c-east' };
+                
+                const miniContainer = document.getElementById('mini-cross-container');
+                miniContainer.innerHTML = pInfo.cartes.map(([nomJ, cStr]) => {
+                    const jIdx = noms.indexOf(nomJ);
+                    const posCls = posClassMap[jIdx] || 'c-south';
+                    const isWinner = (nomJ === pInfo.gagnant) ? 'winner-border' : '';
+                    const r = cStr.slice(0, -1), coul = cStr.slice(-1);
+                    return `<img class="mini-card-cross ${posCls} ${isWinner}" src="${getCardImageUrl(r, coul)}" alt="${cStr}">`;
+                }).join('');
+            } else if (etatJeu.etat !== 'debrief') {
+                lastWidget.style.display = 'none';
+            }
+
             // Joueur actif
             for (let i = 0; i < 4; i++) {
                 const el = document.getElementById(`name-${i}`);
@@ -514,18 +723,33 @@
 
             // Dos de cartes adverses
             if (indexReplayPli === null) {
+                // Nombre de cartes restant exactement en main pour chaque bot
                 const nbC = etatJeu.nb_cartes_joueurs || [8, 8, 8, 8];
-                document.getElementById('hand-north').innerHTML = (etatJeu.etat !== 'annonces') ? renderCardBacks(nbC[2], true) : '';
-                document.getElementById('hand-west').innerHTML  = (etatJeu.etat !== 'annonces') ? renderCardBacks(nbC[1], false) : '';
-                document.getElementById('hand-east').innerHTML  = (etatJeu.etat !== 'annonces') ? renderCardBacks(nbC[3], false) : '';
+                document.getElementById('hand-north').innerHTML = (nbC[2] > 0) ? renderCardBacks(nbC[2], true) : '';
+                document.getElementById('hand-west').innerHTML  = (nbC[1] > 0) ? renderCardBacks(nbC[1], false) : '';
+                document.getElementById('hand-east').innerHTML  = (nbC[3] > 0) ? renderCardBacks(nbC[3], false) : '';
 
                 afficherPliSurTapis(etatJeu.pli_en_cours, etatJeu.info_pli_termine, false);
             }
 
-            // Contrôles enchères
+            // Contrôles enchères avec Surcoinche intelligente
             const bidControls = document.getElementById('bid-controls');
             if (etatJeu.etat === 'annonces' && etatJeu.tour === 0) {
                 bidControls.style.display = 'flex';
+                const btnC = document.getElementById('btn-coinche');
+                if (etatJeu.contrat && etatJeu.contrat.coinche === 1 && (etatJeu.contrat.joueur % 2 === 0)) {
+                    // Contrat de notre équipe coinché par l'adversaire -> bouton Surcoinche !
+                    btnC.style.display = 'inline-block';
+                    btnC.innerText = '💣 SURCOINCHE ! (x3)';
+                    btnC.disabled = false;
+                } else if (etatJeu.contrat && etatJeu.contrat.coinche === 0 && (etatJeu.contrat.joueur % 2 !== 0)) {
+                    // Contrat adverse non coinché -> bouton Coinche normal
+                    btnC.style.display = 'inline-block';
+                    btnC.innerText = '🔥 Coinche';
+                    btnC.disabled = false;
+                } else {
+                    btnC.style.display = 'none';
+                }
                 let minVal = 80;
                 let contratExiste = (etatJeu.contrat && typeof etatJeu.contrat.valeur === 'number');
                 if (contratExiste) {
@@ -575,9 +799,36 @@
                     // POP-UP AUTOMATIQUE
                     if (!modalDonneAffichee && !etatJeu.match_termine) {
                         modalDonneAffichee = true;
-                        document.getElementById('donne-result-icon').innerText = b.reussi ? '🎉' : '💔';
-                        document.getElementById('donne-result-title').innerText = b.reussi ? 'Contrat Réussi !' : 'Contrat Chuté...';
-                        document.getElementById('donne-result-title').style.color = b.reussi ? '#74c69d' : '#e63946';
+                        const preneurEstNous = (etatJeu.contrat && etatJeu.contrat.joueur % 2 === 0);
+                        const victoireNous = preneurEstNous ? b.reussi : !b.reussi;
+                        
+                        let iconResult = '🎉';
+                        let titreResult = 'Contrat Réussi !';
+                        let couleurResult = '#74c69d';
+
+                        if (victoireNous) {
+                            if (preneurEstNous) {
+                                iconResult = '🎉';
+                                titreResult = 'Contrat Réussi !';
+                            } else {
+                                iconResult = '🛡️';
+                                titreResult = 'Défense Réussie ! (Chute adverse)';
+                            }
+                            couleurResult = '#74c69d';
+                        } else {
+                            if (preneurEstNous) {
+                                iconResult = '💔';
+                                titreResult = 'Contrat Chuté...';
+                            } else {
+                                iconResult = '⚠️';
+                                titreResult = "Contrat réussi par l'adversaire";
+                            }
+                            couleurResult = '#e63946';
+                        }
+
+                        document.getElementById('donne-result-icon').innerText = iconResult;
+                        document.getElementById('donne-result-title').innerText = titreResult;
+                        document.getElementById('donne-result-title').style.color = couleurResult;
                         document.getElementById('modal-donne-summary').innerHTML = bilanHtml;
                         document.getElementById('modal-donne').style.display = 'flex';
                     }
@@ -820,7 +1071,7 @@
                         boucleActive = false;
                         await actualiser();
                     }
-                }, 1400);
+                }, 900);
             } 
             else if (etatJeu.etat === 'pli_termine') {
                 boucleActive = true;
@@ -864,39 +1115,119 @@
             await actualiser();
         }
 
-        // DISTRIBUTION ANIMÉE AVEC BRUITS DE CARTES
-        function animerDistribution(callback) {
+        // DISTRIBUTION AUTHENTIQUE ET POSÉE : 3 - 2 - 3 DANS LE SENS HORAIRE
+        async function animerDistribution(promesseDonne) {
+            distributionEnCours = true;
+
+            const southHand = document.getElementById('hand-south');
+            southHand.innerHTML = '';
+            document.getElementById('hand-north').innerHTML = '';
+            document.getElementById('hand-west').innerHTML = '';
+            document.getElementById('hand-east').innerHTML = '';
+
             const stage = document.getElementById('deal-animation-stage');
             stage.style.display = 'block';
-            stage.innerHTML = '<div class="deck-center"></div>';
+            stage.style.opacity = '1';
+            stage.innerHTML = `<div class="deck-center"><img src="${CARD_BACK_URL}" alt="Paquet"></div>`;
 
-            const targets = [
-                { top: '85%', left: '50%' }, // Sud
-                { top: '50%', left: '8%' },  // Ouest
-                { top: '15%', left: '50%' }, // Nord
-                { top: '50%', left: '92%' }  // Est
+            await promesseDonne;
+            const res = await fetch('/api/etat');
+            etatJeu = await res.json();
+
+            const mainBrute = etatJeu.main_brute_tirage || etatJeu.main_humain || [];
+            const donneur = (etatJeu.donneur !== undefined) ? etatJeu.donneur : 0;
+
+            const ordreJoueurs = [
+                (donneur + 1) % 4,
+                (donneur + 2) % 4,
+                (donneur + 3) % 4,
+                donneur
             ];
 
-            for (let i = 0; i < 4; i++) {
-                setTimeout(() => {
-                    playCardSound();
+            const targets = {
+                0: { top: '80%', left: '50%' }, // Sud
+                1: { top: '50%', left: '12%' }, // Ouest
+                2: { top: '18%', left: '50%' }, // Nord
+                3: { top: '50%', left: '88%' }  // Est
+            };
+
+            const tranches = [
+                { debut: 0, fin: 3, total: 3 },
+                { debut: 3, fin: 5, total: 5 },
+                { debut: 5, fin: 8, total: 8 }
+            ];
+
+            for (let v = 0; v < 3; v++) {
+                const { debut, fin, total } = tranches[v];
+                // Son de glissement au départ de la volée
+                playDealSwooshSound();
+
+                for (let k = 0; k < 4; k++) {
+                    const j = ordreJoueurs[k];
+
                     const card = document.createElement('div');
                     card.className = 'flying-card-anim';
+                    card.innerHTML = `<img src="${CARD_BACK_URL}" alt="Dos">`;
                     stage.appendChild(card);
-                    
-                    setTimeout(() => {
+
+                    requestAnimationFrame(() => {
                         card.style.opacity = '1';
-                        card.style.top = targets[i].top;
-                        card.style.left = targets[i].left;
-                    }, 20);
-                }, i * 160);
+                        card.style.top = targets[j].top;
+                        card.style.left = targets[j].left;
+                        card.style.transform = `translate(-50%, -50%) rotate(${(j % 2 === 0 ? 0 : 90) + (v * 8 - 4)}deg)`;
+                    });
+
+                    // LE SON EST DÉCLENCHÉ À L'IMPACT EXACT (300ms) !
+                    setTimeout(() => {
+                        card.remove();
+                        playCardSound(); // <--- SYNCHRONISATION PARFAITE À L'ATTERRISSAGE !
+
+                        if (j === 0) {
+                            for (let idx = debut; idx < Math.min(fin, mainBrute.length); idx++) {
+                                const [r, c] = mainBrute[idx];
+                                southHand.innerHTML += renderCardHTML(r, c, false);
+                            }
+                        } else if (j === 1) {
+                            document.getElementById('hand-west').innerHTML = renderCardBacks(total, false);
+                        } else if (j === 2) {
+                            document.getElementById('hand-north').innerHTML = renderCardBacks(total, true);
+                        } else if (j === 3) {
+                            document.getElementById('hand-east').innerHTML = renderCardBacks(total, false);
+                        }
+                    }, 300);
+
+                    await new Promise(r => setTimeout(r, 100));
+                }
+
+                if (v < 2) {
+                    await new Promise(r => setTimeout(r, 550));
+                }
             }
 
+            // LE RANGEMENT EN ÉVENTAIL :
+            await new Promise(r => setTimeout(r, 600));
+            playCardSound();
+
+            southHand.style.transition = 'transform 0.22s ease, opacity 0.22s ease';
+            southHand.style.transform = 'scale(0.93)';
+            southHand.style.opacity = '0.55';
+
+            await new Promise(r => setTimeout(r, 220));
+
+            distributionEnCours = false;
+            await actualiser();
+
+            southHand.style.transform = 'scale(1)';
+            southHand.style.opacity = '1';
+
+            stage.style.transition = 'opacity 0.3s ease';
+            stage.style.opacity = '0';
             setTimeout(() => {
                 stage.style.display = 'none';
+                stage.style.opacity = '1';
+                stage.style.transition = '';
                 stage.innerHTML = '';
-                callback();
-            }, 1000);
+            }, 300);
         }
 
         async function nouvelleDonne() {
@@ -905,16 +1236,28 @@
             pliSelectionne = null;
             dernierPliCle = "";
             modalDonneAffichee = false;
-              // Remise à zéro pour la nouvelle donne
             coincheVocaleFaite = false;
             beloteVocaleFaite = false;
             rebeloteVocaleFaite = false;
             if ('speechSynthesis' in window) window.speechSynthesis.cancel();
 
-            animerDistribution(async () => {
-                await fetch('/api/nouvelle_donne', { method: 'POST' });
-                await actualiser();
-            });
+            // EFFACEMENT IMMÉDIAT DE L'ANCIENNE MAIN DÈS LE CLIC
+            document.getElementById('hand-south').innerHTML = '';
+            document.getElementById('hand-north').innerHTML = '';
+            document.getElementById('hand-west').innerHTML = '';
+            document.getElementById('hand-east').innerHTML = '';
+
+            const promesse = fetch('/api/nouvelle_donne', { method: 'POST' });
+            animerDistribution(promesse);
+        }
+
+        function actionCoincheOuSurcoinche() {
+            const btn = document.getElementById('btn-coinche');
+            if (btn.innerText.includes("SURCOINCHE")) {
+                actionEnchere('surcoinche');
+            } else {
+                actionEnchere('coinche');
+            }
         }
 
         async function rejouerMatch() {
@@ -957,6 +1300,67 @@
         }, 600);
 
         actualiser();
+    
+        // GESTIONNAIRE DE RACCOURCIS CLAVIER (ENTRÉE PAR DÉFAUT)
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                // 1. Si le zoom du dernier pli est ouvert -> le fermer
+                const zoomModal = document.getElementById('modal-zoom-trick');
+                if (zoomModal && zoomModal.style.display === 'flex') {
+                    e.preventDefault();
+                    fermerZoomDernierPli();
+                    return;
+                }
+
+                // 2. Si le modal de fin de donne est ouvert -> Donne Suivante !
+                const modalDonne = document.getElementById('modal-donne');
+                if (modalDonne && modalDonne.style.display === 'flex') {
+                    e.preventDefault();
+                    nouvelleDonneDepuisModal();
+                    return;
+                }
+
+                // 3. Si le modal de fin de match est ouvert -> Rejouer Match !
+                const modalMatch = document.getElementById('modal-match');
+                if (modalMatch && modalMatch.style.display === 'flex') {
+                    e.preventDefault();
+                    rejouerMatch();
+                    return;
+                }
+
+                // 4. Si le modal d'accueil est ouvert -> Commencer la partie !
+                const modalWelcome = document.getElementById('modal-welcome');
+                if (modalWelcome && modalWelcome.style.display === 'flex') {
+                    e.preventDefault();
+                    validerAccueilEtLancer();
+                    return;
+                }
+
+                // 5. Si c'est à vous d'annoncer -> Valider l'enchère (bouton OK)
+                if (etatJeu && etatJeu.etat === 'annonces' && etatJeu.tour === 0) {
+                    e.preventDefault();
+                    validerEnchere();
+                    return;
+                }
+
+                // 6. Si vous avez une seule carte jouable restante -> la jouer automatiquement !
+                if (etatJeu && etatJeu.etat === 'jeu' && etatJeu.tour === 0 && etatJeu.jouables && etatJeu.jouables.length === 1) {
+                    e.preventDefault();
+                    const [r, c] = etatJeu.jouables[0];
+                    jouerCarte(r, c);
+                    return;
+                }
+            }
+
+            // Raccourci bonus : ESPACE pour "Passe" pendant les annonces
+            if (e.key === ' ' && etatJeu && etatJeu.etat === 'annonces' && etatJeu.tour === 0) {
+                // Éviter de déclencher si on est dans un select
+                if (document.activeElement && document.activeElement.tagName === 'SELECT') return;
+                e.preventDefault();
+                actionEnchere('passe');
+            }
+        });
+
     </script>
 </body>
 </html>

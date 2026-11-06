@@ -21,12 +21,10 @@ class BotGrandMaitre(BotMCIAv5):
 
 
 def obtenir_bots(niveau):
-    if niveau == "coop":
-        return [None, BotCoop(), BotCoop(), BotCoop()]
-    elif niveau == "expert":
-        return [None, BotGrandMaitre(), BotGrandMaitre(), BotGrandMaitre()]
-    else:
+    if niveau == "normal":
         return [None, BotIA(), BotIA(), BotIA()]
+    # Niveau par défaut : notre champion officiel Grand Maître v5
+    return [None, BotGrandMaitre(), BotGrandMaitre(), BotGrandMaitre()]
 
 
 # --- GESTIONNAIRE DE SESSIONS ISOLÉES PAR JOUEUR ---
@@ -89,9 +87,8 @@ def obtenir_session():
 
     if sid not in SESSIONS_UTILISATEURS:
         p = creer_partie_vierge()
-        b = obtenir_bots("coop")
-        demarrer_nouvelle_donne(p)
-        SESSIONS_UTILISATEURS[sid] = {"partie": p, "bots": b, "niveau": "coop", "ts": maintenant}
+        b = obtenir_bots("expert")
+        SESSIONS_UTILISATEURS[sid] = {"partie": p, "bots": b, "niveau": "expert", "ts": maintenant}
     else:
         SESSIONS_UTILISATEURS[sid]["ts"] = maintenant
 
@@ -152,6 +149,14 @@ def traiter_decision_enchere(partie, bots, joueur, dec):
         partie["encheres"].append((joueur, "coinche"))
         partie["bulles"][joueur] = "🔥 COINCHE !"
         partie["message"] = f"{nom_joueur(joueur)} COINCHE le contrat !"
+        terminer_encheres(partie)
+        return
+
+    if dec == "surcoinche" and partie["contrat"] and partie["contrat"].get("coinche", 0) == 1 and partie["contrat"]["joueur"] % 2 == joueur % 2:
+        partie["contrat"]["coinche"] = 2
+        partie["encheres"].append((joueur, "surcoinche"))
+        partie["bulles"][joueur] = "💣 SURCOINCHE !"
+        partie["message"] = f"{nom_joueur(joueur)} SURCOINCHE le contrat !"
         terminer_encheres(partie)
         return
 
@@ -396,8 +401,6 @@ def cloturer_donne(partie, session_data):
 @app.route("/")
 def index():
     partie, bots, data = obtenir_session()
-    if not partie["mains"][0]:
-        demarrer_nouvelle_donne(partie)
     return render_template("index.html")
 
 
@@ -421,11 +424,14 @@ def get_etat():
             "carte_gagnante": f"{c_gag[0]}{c_gag[1]}"
         })
 
+    # Atout pris en compte pour le tri seulement PENDANT le jeu, ordre neutre pendant les annonces
+    atout_tri = partie["contrat"]["atout"] if (partie["contrat"] and partie["etat"] != "annonces") else None
     return jsonify({
         "etat": partie["etat"],
         "donneur": partie["donneur"],
         "scores": partie["scores"],
-        "main_humain": trier_main(partie["mains"][0], partie["contrat"]["atout"] if partie["contrat"] else None),
+        "main_humain": trier_main(partie["mains"][0], atout_tri),
+        "main_brute_tirage": list(partie["main_initiale_humain"]),
         "mains_depart_toutes": [[f"{r}{c}" for r, c in trier_main(m)] for m in partie["mains_initiales_toutes"]],
         "jouables": jouables,
         "tour": partie["tour"],
@@ -437,6 +443,12 @@ def get_etat():
         "message": partie["message"],
         "bulles": partie["bulles"],
         "info_pli_termine": partie["info_pli_termine"],
+        "nb_cartes_joueurs": [len(partie["mains"][j]) for j in range(4)],
+        "dernier_pli_info": ({
+            "cartes": [(nom_joueur(j), f"{c[0]}{c[1]}") for j, c in partie["dernier_pli"]],
+            "gagnant": nom_joueur(gagnant_pli(partie["dernier_pli"], partie["contrat"]["atout"])[0]) if partie["contrat"] else "",
+            "carte_gagnante": f"{gagnant_pli(partie['dernier_pli'], partie['contrat']['atout'])[1][0]}{gagnant_pli(partie['dernier_pli'], partie['contrat']['atout'])[1][1]}" if partie["contrat"] else ""
+        } if partie.get("dernier_pli") and len(partie["dernier_pli"]) == 4 else None),
         "bilan_donne": partie["bilan_donne"],
         "debrief_carte": partie["debrief_carte"],
         "debrief_encheres": partie["debrief_encheres"],
@@ -528,7 +540,7 @@ def route_jouer_carte():
 def route_changer_niveau_ia():
     partie, bots, data = obtenir_session()
     niveau = (request.json or {}).get("niveau", "coop")
-    if niveau not in ("normal", "expert", "coop"):
+    if niveau not in ("normal", "expert"):
         return jsonify({"erreur": f"Niveau inconnu : {niveau}"}), 400
 
     data["bots"] = obtenir_bots(niveau)
