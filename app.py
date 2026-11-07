@@ -102,6 +102,24 @@ def nom_joueur(j):
     return ["Vous (Sud)", "Ouest", "Partenaire (Nord)", "Est"][j]
 
 
+def calculer_force_camp_donne(mains_camp):
+    """Calcule le Potentiel de Maître d'un camp (16 cartes réunies, score 0 à 67)."""
+    cartes_camp = set(mains_camp[0]) | set(mains_camp[1])
+    max_force = 0
+    for coul in ("♠", "♥", "♦", "♣"):
+        cartes_coul = [c for c in cartes_camp if c[1] == coul]
+        force_coul = 0
+        if len(cartes_coul) >= 5:
+            if ("V", coul) in cartes_camp: force_coul += 20
+            if ("9", coul) in cartes_camp: force_coul += 14
+        for autre in ("♠", "♥", "♦", "♣"):
+            if autre != coul and ("A", autre) in cartes_camp:
+                force_coul += 11
+        if force_coul > max_force:
+            max_force = force_coul
+    return max_force
+
+
 def joueur_avec_belote(mains, atout):
     for j in range(4):
         if ("R", atout) in mains[j] and ("D", atout) in mains[j]:
@@ -348,16 +366,30 @@ def cloturer_donne(partie, session_data):
     except Exception as e:
         print(f"Avertissement sauvegarde JSONL: {e}")
 
-    # Calcul de chance
+    # Calcul scientifique de la Chance & des Coups du sort
     try:
-        from moteur import POINTS_ATOUT, POINTS_NON_ATOUT
-        atout = partie["contrat"]["atout"]
-        pts_bruts_nous = sum(POINTS_ATOUT[r] if c == atout else POINTS_NON_ATOUT[r]
-                             for p in (0, 2) for r, c in partie["mains_initiales_toutes"][p])
-        ratio_donne = pts_bruts_nous / 152.0
+        mains_toutes = partie["mains_initiales_toutes"]
+        f_nous = calculer_force_camp_donne([mains_toutes[0], mains_toutes[2]])
+        f_eux  = calculer_force_camp_donne([mains_toutes[1], mains_toutes[3]])
+        ratio_donne = (f_nous + 1.0) / (f_nous + f_eux + 2.0)
         sm["chance_distribution_total"] = sm.get("chance_distribution_total", 0.0) + ratio_donne
-        if camp_preneur == 0 and not reussi and partie["contrat"]["valeur"] <= 100:
+
+        # Vérifier si l'humain a fait des erreurs lourdes sur CETTE donne
+        nb_erreurs_donne = sum(1 for a in partie.get("debrief_carte", []) if a.get("label") == "Erreur")
+        c_val = partie["contrat"]["valeur"]
+        c_coinche = partie["contrat"].get("coinche", 0)
+
+        # 1. VRAI BAD BEAT : Contrat raisonnable chuté sans AUCUNE erreur tactique lourde
+        if camp_preneur == 0 and not reussi and c_val <= 110 and c_coinche == 0 and nb_erreurs_donne == 0:
             sm["bad_beats"] = sm.get("bad_beats", 0) + 1
+
+        # 2. VRAI BRAQUAGE (Coup de chance) :
+        # - En attaque : contrat difficile (>= 120 ou coinché) réussi avec jeu faible (f_nous < 45)
+        # - En défense : contrat adverse raisonnable (<= 100) chuté alors qu'ils avaient le jeu (f_eux >= 40)
+        if camp_preneur == 0 and reussi and (c_val >= 120 or c_coinche > 0) and f_nous < 45:
+            sm["coups_de_chance"] = sm.get("coups_de_chance", 0) + 1
+        elif camp_preneur == 1 and not reussi and c_val <= 100 and f_eux >= 40:
+            sm["coups_de_chance"] = sm.get("coups_de_chance", 0) + 1
     except Exception as e:
         print(f"Avertissement calcul chance: {e}")
 
@@ -378,8 +410,13 @@ def cloturer_donne(partie, session_data):
         else:
             mention = "📚 En apprentissage"
 
-        chance_distrib = round(100 * sm.get("chance_distribution_total", 0.0) / max(1, sm["donnes_jouees"]), 1)
-        avis_chance = "🍀 Chanceux" if chance_distrib >= 53 else ("😾 Malchanceux" if chance_distrib <= 47 else "⚖️ Équilibré")
+        pct_distrib = round(100.0 * sm.get("chance_distribution_total", 0.0) / max(1, sm["donnes_jouees"]), 1)
+        if pct_distrib >= 53.5:
+            avis_chance = "🍀 Belles mains reçues"
+        elif pct_distrib <= 46.5:
+            avis_chance = "😾 Mains pauvres"
+        else:
+            avis_chance = "⚖️ Distribution équilibrée"
 
         partie["bilan_match"] = {
             "victoire": victoire,
@@ -392,9 +429,10 @@ def cloturer_donne(partie, session_data):
             "erreurs": sm["erreurs_humain"],
             "contrats_nous": f"{sm['contrats_reussis'][0]}/{sm['contrats_pris'][0]} réussis",
             "contrats_eux": f"{sm['contrats_reussis'][1]}/{sm['contrats_pris'][1]} réussis",
-            "chance_distrib": f"{chance_distrib} %",
+            "chance_distrib": f"{pct_distrib} %",
             "avis_chance": avis_chance,
-            "bad_beats": sm.get("bad_beats", 0)
+            "bad_beats": sm.get("bad_beats", 0),
+            "braquages": sm.get("coups_de_chance", 0)
         }
 
 
