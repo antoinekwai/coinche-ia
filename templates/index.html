@@ -113,10 +113,10 @@
         /* PLI CENTRAL */
         #center-trick { width: 330px; height: 250px; background: rgba(0,0,0,0.25); border-radius: 20px; border: 2px dashed rgba(255,255,255,0.2); position: relative; }
         .trick-card { position: absolute; display: flex; flex-direction: column; align-items: center; transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1); }
-        .trick-card.pos-south { animation: slideFromSouth 0.25s ease-out; }
-        .trick-card.pos-west  { animation: slideFromWest 0.25s ease-out; }
-        .trick-card.pos-north { animation: slideFromNorth 0.25s ease-out; }
-        .trick-card.pos-east  { animation: slideFromEast 0.25s ease-out; }
+        .trick-card.just-played.pos-south { animation: slideFromSouth 0.2s ease-out; }
+        .trick-card.just-played.pos-west  { animation: slideFromWest 0.2s ease-out; }
+        .trick-card.just-played.pos-north { animation: slideFromNorth 0.2s ease-out; }
+        .trick-card.just-played.pos-east  { animation: slideFromEast 0.2s ease-out; }
 
         @keyframes slideFromSouth { 0% { transform: translate(-50%, 40px) scale(0.9); opacity: 0; } 100% { transform: translate(-50%, 0) scale(1); opacity: 1; } }
         @keyframes slideFromWest  { 0% { transform: translate(-40px, -50%) scale(0.9); opacity: 0; } 100% { transform: translate(0, -50%) scale(1); opacity: 1; } }
@@ -161,10 +161,16 @@
         .card-wrap.playable { cursor: pointer; outline: 3px solid #ffd166; }
         
         /* AU SURVOL : LA CARTE SE DÉGAGE DE L'ÉVENTAIL AU PREMIER PLAN */
+        .card-wrap.playable { 
+            cursor: pointer; 
+            outline: 3px solid #ffd166; 
+            transform: translateY(-8px); /* Légèrement levée en permanence quand jouable */
+            box-shadow: 0 8px 18px rgba(0,0,0,0.6), 0 0 12px rgba(255, 209, 102, 0.7);
+        }
         .card-wrap.playable:hover { 
-            transform: translateY(-22px) scale(1.08); 
-            z-index: 60 !important; 
-            box-shadow: 0 14px 28px rgba(0,0,0,0.8), 0 0 18px #ffd166; 
+            transform: translateY(-16px); /* Monte doucement au survol sans sauter */
+            z-index: 70 !important; 
+            box-shadow: 0 12px 24px rgba(0,0,0,0.8), 0 0 16px #ffd166; 
         }
 
         /* ENCHERES */
@@ -713,13 +719,17 @@
                 if (el) el.classList.toggle('active', etatJeu.tour === i && etatJeu.etat !== 'debrief' && etatJeu.etat !== 'pli_termine');
             }
 
-            // Main Sud
+            // Main Sud (mise à jour UNIQUEMENT si les cartes ont changé, zéro reconstruction en boucle !)
             const southHand = document.getElementById('hand-south');
-            southHand.innerHTML = '';
-            etatJeu.main_humain.forEach(([r, c]) => {
-                const isPlayable = etatJeu.jouables.some(([jr, jc]) => jr === r && jc === c);
-                southHand.innerHTML += renderCardHTML(r, c, isPlayable);
-            });
+            const signatureMain = JSON.stringify(etatJeu.main_humain) + JSON.stringify(etatJeu.jouables);
+            if (southHand.dataset.sig !== signatureMain) {
+                southHand.dataset.sig = signatureMain;
+                southHand.innerHTML = '';
+                etatJeu.main_humain.forEach(([r, c]) => {
+                    const isPlayable = etatJeu.jouables.some(([jr, jc]) => jr === r && jc === c);
+                    southHand.innerHTML += renderCardHTML(r, c, isPlayable);
+                });
+            }
 
             // Dos de cartes adverses
             if (indexReplayPli === null) {
@@ -935,8 +945,10 @@
                     orderBadge = `<div class="trick-order-badge ${isFirst ? 'first' : ''}">${ordreIndex + 1}</div>`;
                 }
 
+                const isLastPlayed = (!isReplay && ordreIndex === cartesPli.length - 1);
+                const animClass = isLastPlayed ? 'just-played' : '';
                 center.innerHTML += `
-                    <div class="trick-card ${posClasses[jIndex]}">
+                    <div class="trick-card ${posClasses[jIndex]} ${animClass}">
                         <div style="position:relative;">
                             ${orderBadge}
                             ${renderCardHTML(r, c)}
@@ -1295,6 +1307,7 @@
         }
 
         setInterval(async () => {
+            if (etatJeu && etatJeu.etat === 'debrief') return; // Tapis 100% figé et stable pendant l'analyse
             await actualiser();
             await boucleJeu();
         }, 600);

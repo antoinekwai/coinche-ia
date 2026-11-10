@@ -47,6 +47,8 @@ class BotMCIAv6(BotMCIA):
             while len(pli) < 4:
                 j = prochain
                 jouables = cartes_jouables(m[j], pli, atout, j, regles)
+                if not jouables:
+                    break
                 if len(jouables) == 1:
                     c = jouables[0]
                 else:
@@ -67,6 +69,8 @@ class BotMCIAv6(BotMCIA):
                 hist.append((j, c))
                 prochain = (j + 1) % 4
 
+            if not pli:
+                break
             gagnant, c_gagnante = gagnant_pli(pli, atout)
             pts_pli = sum(points(c, atout) for _, c in pli)
             if len(hist) == 32:

@@ -10,7 +10,7 @@ from bot_mc_ia import BotMCIA
 from bot_mc_ia_v6 import BotMCIAv6, FICHIER_V6_RESEAU
 from ia_modele_v2 import JoueurIA_V2
 from bot_coop import BotCoop
-from professeur import evaluer_decision_carte, analyser_encheres_humain
+from professeur_v2 import evaluer_decision_carte, analyser_encheres_humain
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "coinche-cle-secrete-production-2026")

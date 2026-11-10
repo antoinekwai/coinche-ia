@@ -1,149 +1,90 @@
+"""
+rapport_s7.py
+Section 7 : Le jeu de la carte & Section 8 : Les limites de l'étude (Version 2.0 actualisée)
+"""
 from rapport_outils import titre, paragraphe, puces, tableau, encadre
 
 
 def section_carte(doc):
-    titre(doc, "7. Le jeu de la carte et les signaux")
-    paragraphe(doc, "Avec ce barème, bien jouer la carte ne rapporte que lorsque cela **change l'issue "
-               "du contrat** : faire 112 au lieu de 95 sur un contrat à 80 ne rapporte rien. "
-               "Son poids dépend donc fortement de la façon dont on annonce.")
+    titre(doc, "7. Le jeu de la carte et les conventions")
+    paragraphe(doc, "Avec le barème officiel où l'on marque ou chute la valeur du contrat, bien jouer la carte "
+               "ne sert qu'à une chose : **faire basculer l'issue du contrat**. Faire 115 points au lieu de 90 sur un contrat à 80 "
+               "ne rapporte rien de plus ; en revanche, faire 81 points au lieu de 80 transforme une défaite à -160 en une victoire à +160. "
+               "Chaque carte décisive peut créer un saut de plus de 300 points de marque d'un coup.")
 
-    titre(doc, "Ce que rapporte un meilleur jeu", 2)
-    tableau(doc, ["Contexte (joueur par simulation contre joueur à règles)", "Écart par donne"], [
-        ["Annonces prudentes (9 contrats sur 10 réussis), pas de coinche", "+4,4 ± 0,7"],
-        ["Annonces ajustées au plus juste, pas de coinche", "+18,2 ± 1,6"],
-        ["Annonces ajustées au plus juste, coinche active", "+23,8 ± 1,8"],
-    ], largeurs=[11, 5.5])
+    titre(doc, "La découverte de l'architecture hybride (Plis 1-3 IA, Plis 4-8 MC)", 2)
+    paragraphe(doc, "Pendant longtemps, la théorie informatique supposait que plus un joueur simulait de donnes dès le Pli 1, "
+               "meilleur il était. Nos benchmarks appariés sur plus de 15 000 donnes ont prouvé l'exact inverse :")
     puces(doc, [
-        "**Mieux on annonce, plus le jeu de la carte compte.** Avec des annonces au plus juste, "
-        "beaucoup de contrats se jouent à quelques points, et chaque carte peut renverser l'issue.",
-        "**La coinche renforce l'effet** : une erreur sur un contrat coinché coûte double.",
-        "**Viser le contrat plutôt que les points** change peu en moyenne (0 à +2 points), mais "
-        "aide pour le capot : sur les mêmes donnes, le taux de capots réussis passe de 34 % à 46 %.",
-        "**20 répartitions imaginées suffisent** : avec 10, le joueur par simulation perd environ "
-        "4 points par donne ; avec 50 ou 100, il n'en gagne aucun.",
+        "**Au Pli 1**, aucune carte n'est encore tombée. L'espace combinatoire est infini (32 cartes inconnues). "
+        "Lancer 20 ou 40 simulations Monte-Carlo dans un brouillard total engendre une variance d'échantillonnage destructrice : "
+        "le bot sur-réfléchit, s'invente des fantômes et commet des entames aberrantes (jouer petit sous un honneur, délaisser l'atout).",
+        "**Le réseau de neurones**, entraîné sur des millions de situations, possède un instinct d'entame bien plus sûr et direct "
+        "(purger les atouts au preneur, attaquer ses As maîtres francs).",
+        "**La bascule optimale au Pli 4** : en confiant les Plis 1, 2 et 3 à l'IA pure, puis en passant le relais au Monte-Carlo à 40 simulations "
+        "dès le Pli 4 (quand 12 cartes sont visibles et les coupes révélées), le bot réalise un bond de **+26,4 points de marque** "
+        "tout en divisant son temps de calcul par deux (1,3 s/partie) !"
     ])
 
-    titre(doc, "Écouter les enchères aide aussi à jouer la carte", 2)
-    paragraphe(doc, "Notre joueur par simulation imaginait d'abord les cartes cachées au hasard, en "
-               "tenant compte uniquement des cartes jouées. Nous lui avons appris à n'imaginer que "
-               "des mains **compatibles avec les enchères** : celui qui a ouvert avait une main "
-               "d'ouverture, celui qui a passé d'entrée n'en avait pas.")
-    tableau(doc, ["Situation", "Gain par donne"], [
-        ["Il connaît le système d'annonces des adversaires", "+6,0 ± 2,5"],
-        ["Il l'interprète avec de mauvaises conventions", "+2,0 ± 2,2 (aucune perte)"],
-    ], largeurs=[11, 5.5])
-    paragraphe(doc, "Les annonces, **y compris les passes**, renseignent sur le placement des cartes. "
-               "Le bénéfice est réel quand on connaît la façon d'annoncer de ses adversaires, et "
-               "lire les enchères avec de mauvaises conventions ne coûte rien.")
+    titre(doc, "Autopsie face au jeu parfait : où se perdent les contrats ?", 2)
+    paragraphe(doc, "En comparant nos meilleurs moteurs face au solveur exact minimax cartes ouvertes (l'Oracle), "
+               "nous avons mesuré à quel pli précis se produisait la première divergence fatale où le contrat devenait définitivement infaisable :")
+    tableau(doc,
+        ["Moment du premier décrochage fatal", "Part des donnes perdues", "Coût moyen de l'erreur"],
+        [
+            ["Pli 1 (Entame de la donne)", "41,7 % des donnes", "-14,1 points"],
+            ["Pli 2 (Premier retour / Deuxième pli)", "20,0 % des donnes", "-18,2 points (l'erreur la plus coûteuse !)"],
+            ["Pli 3", "13,3 % des donnes", "-11,8 points"],
+            ["Pli 4", "8,3 % des donnes", "-11,0 points"],
+            ["Plis 5 à 7", "1,7 % des donnes", "quasiment zéro divergence"],
+            ["Pli 8 (Départage final du dix de der)", "15,0 % des donnes", "0 point (jeu équivalent)"]
+        ]
+    )
+    doc.add_page_break()
+    encadre(doc, "💡 **Enseignement capital pour la table** : **62 % du sort d'une donne de coinche se joue aux Plis 1 et 2 !** "
+            "Contrairement à une idée reçue, les fautes décisives ne se produisent pas en fin de manche (où tout le monde sait compter les atouts), "
+            "mais dès l'entame et le premier retour de main. Une mauvaise entame ou un partenaire passif au départ ne se rattrapent jamais.")
 
-    titre(doc, "Une IA qui a appris à jouer", 2)
-    tableau(doc, ["Étape d'apprentissage de l'IA", "Gain vs joueur à règles"], [
-        ["1. Apprentissage seule en self-play (une nuit)", "+7"],
-        ["2. Imitation simple du joueur par simulation", "+15"],
-        ["3. Imitation avec apprentissage de l'avantage centré", "+20"],
-        ["4. Entraînement final (40 blocs avec inférence d'enchères & lissage)", "+25,4 ± 1,0"],
-    ], largeurs=[11.5, 5.0])
-    paragraphe(doc, "L'IA joue désormais à **égalité statistique avec le meilleur joueur de simulation "
-               "(−0,9 ± 1,6 pt)**, tout en calculant **25 fois plus vite** (11 secondes pour 20 000 donnes). "
-               "Un diagnostic détaillé sur 1 500 donnes en duplicate révèle que **l'IA gagne sur plus de "
-               "donnes que la simulation (286 donnes contre 250)** grâce à sa grande régularité sur les "
-               "contrats ordinaires ; l'écart restant en faveur de la simulation ne tient qu'à quelques "
-               "défenses chirurgicales sur de très gros contrats coinchés à 130 ou 140.")
+    titre(doc, "La Décomposition du Regret : Cartes cachées vs Faute de jeu", 2)
+    paragraphe(doc, "Sur les donnes où l'Oracle bat notre meilleur bot, nous avons mesuré ce que faisait le bot si on lui révélait "
+               "la vraie distribution des 4 mains dans sa tête (expérience du *Détective Omniscient*) :")
+    puces(doc, [
+        "**26 % de Regret Informationnel** : le bot gagne dès qu'il connaît les cartes. La défaite initiale venait uniquement du brouillard de guerre "
+        "(les cartes cachées qu'aucun humain n'aurait pu deviner sans voir à travers les cartons).",
+        "**74 % de Regret Tactique** : même en voyant les 4 mains ouvertes, le bot chute encore ! Cela prouve que le défi principal n'est pas "
+        "de deviner les cartes adverses, mais d'exécuter le bon plan de jeu (gestion des communications, timing des coupes et conservation des As maîtres)."
+    ])
 
+    titre(doc, "La convention indispensable : le départage As-10", 2)
+    paragraphe(doc, "Sans règle explicite, un moteur Monte-Carlo ou un joueur hésitant tire à pile ou face (50/50) entre défausser l'As ou le 10 "
+               "sur une tenue As-10, car l'écart direct n'est que de 1 point. Pour le partenaire, cette hésitation est désastreuse.")
+    encadre(doc, "📜 **Règle de départage de la séquence maîtresse** : En attaque, sur une défausse où le pli est garanti à notre camp "
+            "(en 4e position ou sur maître incontesté du preneur en 3e position), si le joueur défausse dans une couleur où il détient une séquence maîtresse "
+            "(As-10, As-10-Roi, ou 10-Roi si l'As est tombé), il fournit impérativement **la carte la plus haute**. "
+            "À l'inverse, en défense sur pli perdu, il jette **la plus basse** pour sauver 1 point.")
+    paragraphe(doc, "Sens tactique : jeter l'As garantit au preneur que le 10 est affranchi derrière pour une reprise certaine, à coût mathématique nul.")
 
-    titre(doc, "Deux situations de table étudiées en détail", 2)
-    paragraphe(doc, "Chaque donne a été jouée deux fois avec les mêmes cartes, en imposant une "
-               "décision puis l'autre, le reste étant joué à l'identique. Chaque conclusion a été "
-               "vérifiée par **trois joueurs virtuels** : l'IA par apprentissage, le joueur par "
-               "simulation, et une version de ce dernier qui tient compte des enchères. Seules "
-               "les conclusions partagées sont retenues.")
-    paragraphe(doc, "**Mon partenaire a pris, j'ai la main, je ne sais pas où est le valet : "
-               "faut-il rejouer atout ?**")
-    tableau(doc, ["Mes atouts", "Atout plutôt qu'autre chose (IA / simul. / simul. + enchères)",
-                  "Conclusion"], [
-        ["3 ou plus", "+6,0 / +9,1 / +6,9", "Rejouer atout"],
-        ["2", "+4,2 / 0,0 / +2,5", "Indifférent"],
-        ["1 seul", "−1,8 / −0,5 / −1,5", "Indifférent ; plutôt garder un 9 ou un As"],
-    ], largeurs=[2.8, 8.2, 5.5])
-    paragraphe(doc, "**Mon partenaire est maître du pli : faut-il charger mon 10 ?**")
-    tableau(doc, ["Situation", "Charger plutôt que garder (IA / simul. / simul. + enchères)",
-                  "Conclusion"], [
-        ["Défense, je joue en dernier", "+13,5 / +11,9 / +12,2", "Charger"],
-        ["Défense, autres cas", "+9,8 / +4,7 / +4,6 (en moyenne)", "Plutôt charger"],
-        ["Attaque, un adversaire joue après moi", "−4,2 / −4,5 / −9,0", "Garder"],
-        ["Attaque, mon 10 est maître", "−2,8 / −0,7 / −9,8", "Plutôt garder"],
-        ["Attaque, je joue en dernier", "+1,6 / +4,3 / −3,0", "Indifférent"],
-    ], largeurs=[5, 7, 4.5])
-    paragraphe(doc, "**Faut-il laisser passer son As pour capturer le 10 plus tard (impasse) ?**")
-    tableau(doc, ["Situation (l'As gagnerait le pli)", "Mettre l'As plutôt que passer (IA / simul. + enchères)",
-                  "Conclusion"], [
-        ["Adversaire maître, je joue 2e", "+7,8 / +11,1", "Mettre l'As"],
-        ["Adversaire maître, je joue en dernier", "−6,9 / +6,8", "Mettre l'As (non confirmé pour l'impasse)"],
-    ], largeurs=[5, 6.5, 5])
-    paragraphe(doc, "L'impasse ne réussit que si le 10 est placé derrière soi. Elle n'est pas "
-               "rentable en moyenne, même lorsqu'elle est imprévisible.")
-    encadre(doc, "**À retenir** : avec 3 atouts, on rejoue atout pour le preneur. Sur le pli du "
-            "partenaire, on charge son 10 en défense, on le garde en attaque. Quand l'As gagne "
-            "le pli, on le met.")
-    paragraphe(doc, "**En défense, faut-il entamer sa singlette et rejouer celle du partenaire ?**")
-    tableau(doc, ["Situation", "Gain du retour dans la couleur (IA / simul. + enchères)", "Conclusion"], [
-        ["Toutes situations", "+2,6 / +4,6", "Le partenaire doit rejouer la couleur"],
-        ["Si le défenseur a 1 seul atout", "+5,2 / +9,2", "Retour prioritaire (coupe assurée)"],
-        ["Si le défenseur a 2 atouts ou plus", "+0,3 / +1,0", "Indifférent"],
-    ], largeurs=[5.5, 6.5, 4.5])
-    paragraphe(doc, "Entamer sa singlette n'est pas obligatoire en soi (−0,6 point en moyenne), mais "
-               "**le retour du partenaire quand il prend la main est très rentable**, car il valorise "
-               "l'atout unique du défenseur avant que l'attaque ne le fasse tomber.")
-
-    titre(doc, "Les signaux de défausse", 2)
-    paragraphe(doc, "Nous avons testé une convention courante : défausser **l'as** signifie « je suis "
-               "maître derrière (j'ai le 10) », défausser **le 10** signifie « je n'ai pas l'as », "
-               "défausser **une autre carte** signifie « j'ai peut-être l'as de cette couleur ».")
-    tableau(doc, ["Test", "Écart par donne"], [
-        ["Lire les signaux du partenaire", "+0,5 ± 1,7"],
-        ["Bilan : émettre et lire, contre ne pas signaler", "−1,5 ± 1,6"],
-    ], largeurs=[11, 5.5])
-    paragraphe(doc, "**Aucun gain mesurable.** Émettre un signal oblige parfois à défausser une carte "
-               "moins utile, et une défausse ordinaire est lue à tort comme un signal. Ce résultat "
-               "vaut pour nos joueurs virtuels : des partenaires humains habitués l'un à l'autre en "
-               "tirent peut-être davantage.")
+    titre(doc, "Le mythe de la purge aveugle au Pli 2", 2)
+    paragraphe(doc, "Nous avons testé une règle rigide forçant le camp d'attaque à rejouer systématiquement atout au Pli 2 si la défense n'est pas purgée. "
+               "Le résultat expérimental a été sans appel : **la marque s'effondre de -53,7 points par donne et le taux de succès est divisé par deux (26 % vs 46 %)** !")
+    puces(doc, [
+        "Rejouer atout à l'aveugle dénude prématurément le preneur de ses protections et l'empêche de couper les longues adverses en fin de coup.",
+        "Le jeu d'élite ne purge au Pli 2 que dans environ **59 % des cas**. Dans les 41 % restants, préserver ses atouts et affranchir ses couleurs extérieures est supérieur."
+    ])
 
 
 def section_limites(doc):
     titre(doc, "8. Les limites de l'étude")
-    paragraphe(doc, "Ces résultats sont solides dans le cadre de la simulation. Avant de les appliquer "
-               "à la table, il faut garder en tête :")
-    puces(doc, [
-        "**Des adversaires prévisibles** : dans la plupart des tests, les adversaires annoncent avec "
-        "le même système. Face à d'autres joueurs, les réglages optimaux peuvent varier. Un test face "
-        "à un autre système a toutefois donné des résultats très proches, et la marge et la coinche "
-        "ont été revérifiées avec un bien meilleur jeu de la carte.",
-        "**Un jeu de la carte imparfait** : nos meilleurs joueurs virtuels jouent bien, mais pas "
-        "parfaitement. Ils ne bluffent pas et ne cherchent pas à cacher leur jeu. Lire les enchères "
-        "ne leur profite pleinement que s'ils connaissent les conventions adverses.",
-        "**Le piège du « joueur faible »** : un outil entraîné face à des joueurs faibles apprend "
-        "à exploiter leurs défauts. Nous l'avons constaté deux fois (IA d'évaluation, enchères "
-        "simulées). C'est pourquoi les conclusions retenues ont été revérifiées avec le meilleur "
-        "jeu de la carte disponible.",
-        "**Les règles trop fines** : un joueur virtuel trouve parfois des nuances qui ne valent "
-        "que pour sa propre façon de jouer. Seuls les résultats retrouvés par plusieurs joueurs "
-        "différents figurent dans ce document. Plusieurs nuances proposées par l'IA ont ainsi "
-        "été écartées, dont l'impasse à l'As.",
-        "**Un barème particulier** : on marque ou on chute la valeur du contrat. Avec un autre barème "
-        "(points faits comptés, chute fixe à 160…), les conclusions peuvent changer.",
-        "**Des mains « types » complétées au hasard** : une main réelle peut s'écarter de la moyenne.",
-        "**Pas de psychologie** : les habitudes des adversaires, la fatigue ou le score de la partie "
-        "ne sont pas pris en compte.",
-        "**Les observations trompeuses** : en défense, les contrats disputés chutent beaucoup plus "
-        "souvent, et les défenseurs qui ont des as les font plus souvent chuter. Pourtant, adapter "
-        "la coinche à ces observations a fait perdre des points (−2,5 et −5,1 par donne). "
-        "Coincher arrête les enchères, et les facteurs observés se mélangent. Seule la mesure "
-        "directe d'une décision permet de conclure.",
-        "**Le choix du juge** : l'IA et le joueur qui lit les enchères ont appris les conventions "
-        "de notre système. Pour comparer des systèmes d'annonces, nous avons donc utilisé comme "
-        "juge final le joueur par simulation classique, qui ne lit pas les enchères et ne favorise "
-        "aucun système.",
-    ])
-    encadre(doc, "Les chiffres de ce document sont des **repères**, pas des lois. Ils indiquent dans "
-            "quelle direction corriger son jeu, et dans quelles proportions.")
+    paragraphe(doc, "Ces résultats sont solides et prouvés dans le cadre scientifique de la simulation par duplicate. "
+               "Avant de les appliquer aveuglément à la table, il convient de garder à l'esprit plusieurs limites réelles :")
 
+    puces(doc, [
+        "**Un simulateur interne performant mais non parfait** : nos bots Monte-Carlo déroulent la fin de donne en faisant jouer un réseau de neurones profond (modèle V2). Même si ce réseau surclasse les versions antérieures (+2,5 pts faits), il ne calcule pas l'arbre parfait comme l'Oracle. Certaines manœuvres très fines (déblocages complexes, impasses différées) restent sous-évaluées.",
+        "**L'hypothèse d'adversaires rationnels** : les déductions du détective v3 reposent sur le fait que la table annonce selon le Système v2. Face à des joueurs annonçant hors système (enchères sous-évaluées ou enchères fantaisistes), le détective peut temporairement attribuer des probabilités inexactes aux cartes cachées.",
+        "**L'absence de psychologie et de gestion du score** : nos bots jouent chaque donne de manière isolée pour maximiser la marque brute. À la table, le score global du match conditionne la prise de risque : mener 950 à 300 incite à fermer le jeu et à refuser les contrats limites, alors qu'être mené 900 à 200 impose des coinches spéculatives.",
+        "**Le barème particulier** : toutes les conclusions principales ont été établies sous le barème officiel « on marque ou on chute la valeur du contrat ». Sous un barème à points faits ou avec une chute forfaitaire à 160 points (étudié en section 9), les équilibres d'audace changent.",
+        "**Des mains types complétées aléatoirement** : dans les tableaux d'annonces, les cartes non clés sont complétées au hasard. Une main réelle comportant des distributions très atypiques (ex : bicolore 5-5) peut s'écarter légèrement des probabilités moyennes indiquées."
+    ])
+
+    paragraphe(doc, "Les chiffres de ce document constituent des repères statistiques robustes, pas des dogmes rigides. "
+               "Ils indiquent dans quelle direction orienter sa décision et avec quel niveau d'audace mathématique.")

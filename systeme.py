@@ -211,6 +211,10 @@ class JoueurSysteme(JoueurRegles):
 
         # 2. Les adversaires ont surenchéri : on se bat jusqu'à notre limite
         if contrat["joueur"] % 2 != moi:
+            if joueur != ouvreur and self.reponse(main, ouverture, a) == 0:
+                # Le répondant n'a aucun soutien à apporter : il passe et laisse l'ouvreur décider
+                return "passe"
+
             if joueur == ouvreur:
                 valeur = self.niveau(main, a)
                 rep = reponse_partenaire(self.encheres, ouvreur)
