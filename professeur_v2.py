@@ -364,24 +364,25 @@ def analyser_encheres_humain(main_depart, encheres_partie, joueur_humain=0):
         except Exception as e:
             pass
 
-        # 2. CONSEIL DOCTRINAL SYSTÈME V2
+        # 2. CONSEIL DOCTRINAL SYSTÈME V2 (AVEC LES 4 CRITÈRES OBJECTIFS)
         sys_v2.encheres = list(encheres_avant)
         decision_recommandee = sys_v2.annoncer(main_depart, joueur_humain, dernier_c, REGLES_STANDARD)
         nom_reco = f"{decision_recommandee[0]} {decision_recommandee[1]}" if isinstance(decision_recommandee, tuple) else str(decision_recommandee).upper()
 
-        if action == decision_recommandee:
-            commentaires.append(f"  • *Système officiel* : Votre décision **{nom_reco}** est 100 % conforme à la grille d'audace à 4/5.")
+        action_est_optimale = bool(bilan_tour and meilleure_opt and (action_nom.lower() in meilleure_opt.lower()))
+
+        if action == decision_recommandee or action_est_optimale:
+            if action == decision_recommandee:
+                commentaires.append(f"  • *Système officiel* : Votre décision **{action_nom}** est 100 % conforme aux critères du Système v2.")
+            else:
+                commentaires.append(f"  • *Décision tactique validée* : Même si la grille théorique envisageait {nom_reco}, votre choix **{action_nom}** maximise l'espérance réelle à la table.")
         else:
-            commentaires.append(f"  • *Grille Système v2* : Le système conseillait **{nom_reco}**.")
-            if action == "passe" and decision_recommandee != "passe":
-                commentaires.append(f"    -> *Manque d'audace* : Votre main justifiait d'ouvrir à {nom_reco} (succès estimé >= 80 %).")
-            elif action != "passe" and decision_recommandee == "passe":
-                commentaires.append(f"    -> *Prise de risque* : Annoncer {action_nom} était trop dangereux sans jeu de soutien.")
-            elif isinstance(action, tuple) and isinstance(decision_recommandee, tuple):
-                if action[0] > decision_recommandee[0]:
-                    commentaires.append(f"    -> *Palier trop haut* : {action[0]} est trop ambitieux. La sécurité était à {decision_recommandee[0]}.")
-                else:
-                    commentaires.append(f"    -> *Sous-évaluation* : Votre jeu permettait d'annoncer {decision_recommandee[0]}.")
+            action_verbe = "d'ouvrir" if not dernier_c else "de surenchérir"
+            commentaires.append(f"  • *Recommandation Système v2* : Le système conseillait **{nom_reco}**.")
+            if action != "passe" and decision_recommandee == "passe":
+                commentaires.append(f"    -> *Prise de risque* : Surenchérir à {action_nom} est dangereux sans critères de sécurité (il faut soit 5 atouts, soit 4 avec chicane, soit la Belote R-D en main, soit le soutien du partenaire).")
+            elif action == "passe" and decision_recommandee != "passe":
+                commentaires.append(f"    -> *Occasion manquée* : Votre jeu remplissait les critères de sécurité pour disputer le contrat à {nom_reco}.")
 
         # 3. CONSEIL COINCHE SI CONTRAT ADVERSE
         if dernier_c and (dernier_c["joueur"] % 2 != joueur_humain % 2):

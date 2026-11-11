@@ -27,6 +27,23 @@ FICHIER_V6_RESEAU = "ia_carte_v2_champion.pt"
 class BotMCIAv6(BotMCIA):
     nom = "Bot-MC-IA v6 (Réseau V2 + MC 40s)"
 
+    def annoncer(self, main, joueur, contrat, regles):
+        """Le Grand Maître annonce selon le Système v2, mais valide les contrats >= 130 par simulation de sécurité."""
+        decision = super().annoncer(main, joueur, contrat, regles)
+        if isinstance(decision, tuple) and decision[0] >= 130:
+            val, coul = decision
+            reussites = 0
+            for _ in range(20):
+                m_sim = imaginer_v3(main, joueur, [], list(self.encheres) if self.encheres else [], coul, regles)
+                pts_t, pl_t = self.simuler_avec_ia_v2(m_sim, [], coul, {"valeur": val, "atout": coul, "joueur": joueur, "coinche": 0, "capot": (val >= 250)}, joueur, m_sim[joueur][0], regles)
+                bel = belote_imaginee(m_sim, [], coul)
+                if contrat_reussi({"valeur": val, "atout": coul, "joueur": joueur, "coinche": 0, "capot": (val >= 250)}, pts_t[joueur % 2], pl_t[joueur % 2], bel == (joueur % 2), regles):
+                    reussites += 1
+            if reussites < 15: # Exige au moins 75 % de réussite simulée pour franchir 130
+                return (120, coul) if val > 120 else "passe"
+        return decision
+    nom = "Bot-MC-IA v6 (Réseau V2 + MC 40s)"
+
     def __init__(self, nb_simulations=40, fichier_reseau=FICHIER_V6_RESEAU):
         super().__init__()
         self.nb_simulations = nb_simulations
