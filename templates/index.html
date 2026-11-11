@@ -430,7 +430,7 @@
         </div>
 
         <div class="btn-sticky-container">
-            <button class="btn-next-donne" onclick="nouvelleDonne()">Donne Suivante ➔</button>
+            <button class="btn-next-donne" onclick="fermerPanneauProfesseur(); nouvelleDonne();">Donne Suivante ➔</button>
         </div>
     </div>
 
@@ -1253,7 +1253,17 @@
             rebeloteVocaleFaite = false;
             if ('speechSynthesis' in window) window.speechSynthesis.cancel();
 
-            // EFFACEMENT IMMÉDIAT DE L'ANCIENNE MAIN DÈS LE CLIC
+            // FERMETURE ET NETTOYAGE TOTAL DU MODE PROFESSEUR ET DU REPLAY
+            const profPanel = document.getElementById('professor-panel');
+            if (profPanel) profPanel.style.display = 'none';
+            const repBar = document.getElementById('replay-bar');
+            if (repBar) repBar.style.display = 'none';
+            const centerTrick = document.getElementById('center-trick');
+            if (centerTrick) centerTrick.innerHTML = '';
+            const lastW = document.getElementById('last-trick-widget');
+            if (lastW) lastW.style.display = 'none';
+
+            // EFFACEMENT IMMÉDIAT DE TOUTES LES MAINS SUR LE TAPIS
             document.getElementById('hand-south').innerHTML = '';
             document.getElementById('hand-north').innerHTML = '';
             document.getElementById('hand-west').innerHTML = '';
