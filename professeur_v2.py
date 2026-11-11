@@ -285,20 +285,39 @@ def simuler_esperance_options_tour(main_depart, encheres_avant, action_choisie, 
         val_c = c["valeur"]
 
         for m in mains_sims:
-            # Évaluation rapide par simulation réseau
-            pts_tot, plis_tot = _PROF_BOT.simuler_avec_ia_v2(m, [], c["atout"], c, joueur_humain, m[joueur_humain][0], regles)
-            bel = belote_imaginee(m, [], c["atout"])
+            m_eval = [list(mm) for mm in m]
+            
+            # SI OPTION COINCHE : Partenaire minimaliste (zéro As pour tester si l'humain bat le preneur tout seul !)
+            if opt == "coinche":
+                part = (joueur_humain + 2) % 4
+                adv_e = (joueur_humain + 3) % 4
+                as_p = [carte for carte in m_eval[part] if carte[0] == "A"]
+                for a_carte in as_p:
+                    petites = [carte for carte in m_eval[adv_e] if carte[0] in ("7", "8", "9") and carte[1] != c["atout"]]
+                    if petites:
+                        ech = petites[0]
+                        m_eval[part].remove(a_carte); m_eval[adv_e].remove(ech)
+                        m_eval[part].append(ech); m_eval[adv_e].append(a_carte)
+
+            pts_tot, plis_tot = _PROF_BOT.simuler_avec_ia_v2(m_eval, [], c["atout"], c, joueur_humain, m_eval[joueur_humain][0], regles)
+            bel = belote_imaginee(m_eval, [], c["atout"])
             camp_p = c["joueur"] % 2
             reussi = contrat_reussi(c, pts_tot[camp_p], plis_tot[camp_p], bel == camp_p, regles)
             
-            # Marque pour le camp de l'humain
             if camp_p == eq_humain:
                 gain = (val_c * mult) if reussi else (-val_c * mult)
             else:
                 gain = (val_c * mult) if not reussi else (-val_c * mult)
             gains.append(gain)
 
-        bilan[lbl] = round(float(np.mean(gains)), 1)
+        esp_brute = round(float(np.mean(gains)), 1)
+        
+        # Pénalité de sécurité sur la coinche : à 50/50, coincher est une erreur de risque !
+        # La coinche n'est valorisée que si le gain net dépasse largement la sécurité du Passe
+        if opt == "coinche" and esp_brute <= 20.0:
+            esp_brute = round(esp_brute - 30.0, 1)
+
+        bilan[lbl] = esp_brute
 
     return bilan
 
