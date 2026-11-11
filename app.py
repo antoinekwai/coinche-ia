@@ -204,9 +204,9 @@ def traiter_decision_enchere(partie, bots, joueur, dec):
         else: break
 
     if partie["contrat"] is None and len(partie["encheres"]) == 4:
-        partie["message"] = "4 passes générales. On redistribue..."
+        partie["etat"] = "passe_generale"
+        partie["message"] = "4 passes générales ! Aucun preneur, nouvelle donne dans un instant..."
         partie["donneur"] = (partie["donneur"] + 1) % 4
-        demarrer_nouvelle_donne(partie)
         return
 
     if partie["contrat"] is not None and passes == 3:

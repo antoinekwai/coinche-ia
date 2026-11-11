@@ -648,6 +648,15 @@
                 }
             }
 
+            // Gestion propre de la redistribution après 4 passes générales
+            if (etatJeu.etat === 'passe_generale' && !distributionEnCours) {
+                distributionEnCours = true;
+                setTimeout(() => {
+                    nouvelleDonne();
+                }, 1200);
+                return;
+            }
+
             // DÉCLENCHEURS VOCAUX UNIQUES (1 seule fois par événement)
             if (etatJeu.bulles) {
                 const aCoinche = etatJeu.bulles.some(txt => txt && txt.includes("COINCHE"));
@@ -1119,11 +1128,34 @@
         async function jouerCarte(rang, couleur) {
             getAudioContext();
             playCardSound();
-            await fetch('/api/jouer_carte', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ rang, couleur })
-            });
+
+            // RETOUR VISUEL IMMÉDIAT (0 ms) : on pose la carte de suite sur le tapis
+            const center = document.getElementById('center-trick');
+            const carteStr = `${rang}${couleur}`;
+            const nomSud = "Vous (Sud)";
+            
+            // Retirer visuellement la carte de la main Sud tout de suite
+            const carteEl = document.querySelector(`.card-wrap[title="${carteStr}"]`);
+            if (carteEl) carteEl.style.display = 'none';
+
+            // Ajouter la carte au centre immédiatement
+            center.innerHTML += `
+                <div class="trick-card pos-south just-played">
+                    <div style="position:relative;">${renderCardHTML(rang, couleur)}</div>
+                    <span>${nomSud}</span>
+                </div>
+            `;
+
+            // Requête serveur en arrière-plan
+            try {
+                await fetch('/api/jouer_carte', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rang, couleur })
+                });
+            } catch(e) {
+                console.error("Erreur jouer_carte:", e);
+            }
             await actualiser();
         }
 
