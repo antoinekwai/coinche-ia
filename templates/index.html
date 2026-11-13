@@ -1258,6 +1258,8 @@
 
             await new Promise(r => setTimeout(r, 220));
 
+            southHand.innerHTML = '';
+            delete southHand.dataset.sig;
             distributionEnCours = false;
             await actualiser();
 
