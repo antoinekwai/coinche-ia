@@ -1,0 +1,51 @@
+=== ARBITRAGE DÉFENSIF (rapide) : 2000 donnes appariées vs MC-Enchères ===
+     50/2000 |   0.6 min | écart marque corrigé-ancien : -3.60
+    100/2000 |   1.1 min | écart marque corrigé-ancien : -0.20
+    150/2000 |   1.6 min | écart marque corrigé-ancien : -0.13
+    200/2000 |   2.1 min | écart marque corrigé-ancien : +0.90
+    250/2000 |   2.6 min | écart marque corrigé-ancien : +2.40
+    300/2000 |   3.0 min | écart marque corrigé-ancien : +4.40
+    350/2000 |   3.5 min | écart marque corrigé-ancien : +3.77
+    400/2000 |   3.9 min | écart marque corrigé-ancien : +3.30
+    450/2000 |   4.4 min | écart marque corrigé-ancien : +2.36
+    500/2000 |   5.0 min | écart marque corrigé-ancien : +2.92
+    550/2000 |   5.5 min | écart marque corrigé-ancien : +3.05
+    600/2000 |   6.0 min | écart marque corrigé-ancien : +3.10
+    650/2000 |   6.6 min | écart marque corrigé-ancien : +3.23
+    700/2000 |   7.1 min | écart marque corrigé-ancien : +3.29
+    750/2000 |   7.5 min | écart marque corrigé-ancien : +3.89
+    800/2000 |   8.0 min | écart marque corrigé-ancien : +3.65
+    850/2000 |   8.5 min | écart marque corrigé-ancien : +3.44
+    900/2000 |   9.0 min | écart marque corrigé-ancien : +3.24
+    950/2000 |   9.5 min | écart marque corrigé-ancien : +3.07
+   1000/2000 |   9.9 min | écart marque corrigé-ancien : +2.90
+   1050/2000 |  10.4 min | écart marque corrigé-ancien : +3.37
+   1100/2000 |  10.9 min | écart marque corrigé-ancien : +3.22
+   1150/2000 |  11.4 min | écart marque corrigé-ancien : +3.57
+   1200/2000 |  11.9 min | écart marque corrigé-ancien : +3.42
+   1250/2000 |  12.3 min | écart marque corrigé-ancien : +3.41
+   1300/2000 |  12.8 min | écart marque corrigé-ancien : +3.42
+   1350/2000 |  13.3 min | écart marque corrigé-ancien : +3.33
+   1400/2000 |  13.8 min | écart marque corrigé-ancien : +3.39
+   1450/2000 |  14.4 min | écart marque corrigé-ancien : +3.27
+   1500/2000 |  14.9 min | écart marque corrigé-ancien : +3.45
+   1550/2000 |  15.4 min | écart marque corrigé-ancien : +3.03
+   1600/2000 |  15.9 min | écart marque corrigé-ancien : +2.94
+   1650/2000 |  16.3 min | écart marque corrigé-ancien : +2.85
+   1700/2000 |  16.8 min | écart marque corrigé-ancien : +2.88
+   1750/2000 |  17.3 min | écart marque corrigé-ancien : +2.80
+   1800/2000 |  17.8 min | écart marque corrigé-ancien : +2.82
+   1850/2000 |  18.3 min | écart marque corrigé-ancien : +2.85
+   1900/2000 |  18.8 min | écart marque corrigé-ancien : +2.66
+   1950/2000 |  19.3 min | écart marque corrigé-ancien : +2.72
+   2000/2000 |  19.8 min | écart marque corrigé-ancien : +2.65
+
+======================================================================
+RÉSULTATS (rapide) SUR 2000 DONNES APPARIÉES
+======================================================================
+ancien   | Pts faits   80.6 | Succès  49.0% | Marque    -2.6 | 0.30 s/donne
+corrige  | Pts faits   81.2 | Succès  50.1% | Marque    +0.0 | 0.30 s/donne
+----------------------------------------------------------------------
+ÉCART DE MARQUE (corrigé - ancien) : +2.65 ± 1.58 pts/donne (IC 95 %)
+Donnes où le jeu a changé : 707 / 2000 (35.4 %)
+  Sur ces donnes : écart moyen +7.5 | corrigé meilleur 29 | pire 8 | égal 670

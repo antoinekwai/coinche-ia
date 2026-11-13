@@ -1,0 +1,23 @@
+=== ARBITRAGE DÉFENSIF (v6) : 600 donnes appariées vs MC-Enchères ===
+     50/600 |   2.5 min | écart marque corrigé-ancien : +0.00
+    100/600 |   4.9 min | écart marque corrigé-ancien : +0.00
+    150/600 |   7.2 min | écart marque corrigé-ancien : +0.00
+    200/600 |   9.4 min | écart marque corrigé-ancien : -2.20
+    250/600 |  11.4 min | écart marque corrigé-ancien : -1.76
+    300/600 |  13.7 min | écart marque corrigé-ancien : +0.93
+    350/600 |  16.1 min | écart marque corrigé-ancien : +1.54
+    400/600 |  18.3 min | écart marque corrigé-ancien : +1.35
+    450/600 |  20.5 min | écart marque corrigé-ancien : +0.62
+    500/600 |  23.0 min | écart marque corrigé-ancien : +0.56
+    550/600 |  25.4 min | écart marque corrigé-ancien : +0.51
+    600/600 |  27.8 min | écart marque corrigé-ancien : +1.10
+
+======================================================================
+RÉSULTATS (v6) SUR 600 DONNES APPARIÉES
+======================================================================
+ancien   | Pts faits   83.6 | Succès  53.0% | Marque    +6.8 | 1.39 s/donne
+corrige  | Pts faits   84.1 | Succès  53.3% | Marque    +7.8 | 1.39 s/donne
+----------------------------------------------------------------------
+ÉCART DE MARQUE (corrigé - ancien) : +1.10 ± 2.46 pts/donne (IC 95 %)
+Donnes où le jeu a changé : 82 / 600 (13.7 %)
+  Sur ces donnes : écart moyen +8.0 | corrigé meilleur 5 | pire 3 | égal 74
