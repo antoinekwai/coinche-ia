@@ -15,7 +15,7 @@ from ia_joueur import cartes_sont_equivalentes_rapide
 from systeme_v2 import SysV2
 
 torch.set_num_threads(1)
-FICHIER_V2_DEFAUT = "ia_carte_v2.pt"
+FICHIER_V2_DEFAUT = "ia_carte_v2_champion.pt"
 
 
 def creer_reseau_v2():

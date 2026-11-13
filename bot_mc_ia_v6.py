@@ -40,9 +40,12 @@ class BotMCIAv6(BotMCIA):
                 if contrat_reussi({"valeur": val, "atout": coul, "joueur": joueur, "coinche": 0, "capot": (val >= 250)}, pts_t[joueur % 2], pl_t[joueur % 2], bel == (joueur % 2), regles):
                     reussites += 1
             if reussites < 15: # Exige au moins 75 % de réussite simulée pour franchir 130
-                return (120, coul) if val > 120 else "passe"
+                # Repli à 120 UNIQUEMENT si 120 reste une surenchère légale
+                valeur_actuelle = contrat["valeur"] if contrat else 0
+                return (120, coul) if 120 > valeur_actuelle else "passe"
+
         return decision
-    nom = "Bot-MC-IA v6 (Réseau V2 + MC 40s)"
+   
 
     def __init__(self, nb_simulations=40, fichier_reseau=FICHIER_V6_RESEAU):
         super().__init__()

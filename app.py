@@ -1,3 +1,4 @@
+from partie import annonce_valide
 import os
 import json
 import time
@@ -164,6 +165,10 @@ def executer_un_coup_bot_enchere(partie, bots):
 
 def traiter_decision_enchere(partie, bots, joueur, dec):
     regles = REGLES_STANDARD
+    # Garde-fou : toute annonce illégale (bot ou humain) est refusée et traitée comme une passe
+    if isinstance(dec, tuple) and not annonce_valide(dec, partie["contrat"], regles):
+        print(f"⚠️ ENCHÈRE ILLÉGALE refusée : {nom_joueur(joueur)} proposait {dec} sur {partie['contrat']}", flush=True)
+        dec = "passe"
     if dec == "coinche" and partie["contrat"] and partie["contrat"]["joueur"] % 2 != joueur % 2:
         partie["contrat"]["coinche"] = 1
         partie["encheres"].append((joueur, "coinche"))
