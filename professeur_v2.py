@@ -217,12 +217,21 @@ def simuler_esperance_options_tour(main_depart, encheres_avant, action_choisie, 
         if isinstance(d_p, tuple):
             dernier_contrat = (j_p, d_p[0], d_p[1])
 
-    # 2. Options à tester
+    # 2. Identifier les couleurs annoncées par les adversaires
+    couleurs_adverses = {
+        act[1] for j_p, act in encheres_avant
+        if isinstance(act, tuple) and (j_p % 2 != joueur_humain % 2)
+    }
+
+    # Options à tester
     options = ["passe"]
     est_adverse = False
     val_actuelle = 80
-    coul_actuelle = "♠"
+    coul_actuelle = "?"
     preneur_actuel = 1
+
+    # Couleurs éligibles pour l'humain (exclut strictement les couleurs adverses)
+    couleurs_libres = [c for c in COULEURS if c not in couleurs_adverses]
 
     if dernier_contrat:
         preneur_actuel, val_actuelle, coul_actuelle = dernier_contrat
@@ -232,18 +241,22 @@ def simuler_esperance_options_tour(main_depart, encheres_avant, action_choisie, 
 
         palier_suivant = val_actuelle + 10
         if palier_suivant <= 160:
-            # Meilleure couleur en main (la plus longue)
-            coul_pref = max(COULEURS, key=lambda c: sum(1 for x in main_depart if x[1] == c))
-            options.append((palier_suivant, coul_pref))
-            if coul_actuelle != coul_pref and (palier_suivant, coul_actuelle) not in options:
-                options.append((palier_suivant, coul_actuelle))
+            # 1. Meilleure couleur libre en main
+            if couleurs_libres:
+                coul_pref = max(couleurs_libres, key=lambda c: sum(1 for x in main_depart if x[1] == c))
+                options.append((palier_suivant, coul_pref))
+
+            # 2. Soutien du partenaire uniquement (si le contrat n'est PAS adverse)
+            if not est_adverse:
+                if (palier_suivant, coul_actuelle) not in options:
+                    options.append((palier_suivant, coul_actuelle))
     else:
         # En ouverture : tester Passe, 80, 90, 100 dans la meilleure couleur
         coul_pref = max(COULEURS, key=lambda c: sum(1 for x in main_depart if x[1] == c))
         for v in (80, 90, 100):
             options.append((v, coul_pref))
 
-    # Ajouter le choix réel du joueur s'il n'est pas déjà dans la liste
+    # Ajouter le choix réel du joueur s'il n'est pas déjà dans la liste (même si sous-optimal)
     if action_choisie not in options:
         options.append(action_choisie)
 
@@ -388,13 +401,26 @@ def analyser_encheres_humain(main_depart, encheres_partie, joueur_humain=0):
         decision_recommandee = sys_v2.annoncer(main_depart, joueur_humain, dernier_c, REGLES_STANDARD)
         nom_reco = f"{decision_recommandee[0]} {decision_recommandee[1]}" if isinstance(decision_recommandee, tuple) else str(decision_recommandee).upper()
 
+        # Détection immédiate d'une annonce dans la couleur adverse
+        couleurs_adv_tour = {
+            act[1] for j_p, act in encheres_avant
+            if isinstance(act, tuple) and (j_p % 2 != joueur_humain % 2)
+        }
+        annonce_adverse = isinstance(action, tuple) and (action[1] in couleurs_adv_tour)
+
         action_est_optimale = bool(bilan_tour and meilleure_opt and (action_nom.lower() in meilleure_opt.lower()))
 
-        if action == decision_recommandee or action_est_optimale:
+        # Priorité 1 : Si l'humain a joué la couleur adverse, on le sanctionne doctrinalement !
+        if annonce_adverse:
+            commentaires.append(f"  • ⚠️ *Faute de doctrine* : Vous avez surenchéri à **{action_nom}** dans une couleur annoncée par l'adversaire ! Sauf cas rarissime, on ne dispute jamais le contrat à l'atout de l'ennemi.")
+            commentaires.append(f"  • *Recommandation Système v2* : Le système conseillait **{nom_reco}**.")
+        # Priorité 2 : Choix conforme ou jugé optimal par la simulation
+        elif action == decision_recommandee or action_est_optimale:
             if action == decision_recommandee:
                 commentaires.append(f"  • *Système officiel* : Votre décision **{action_nom}** est 100 % conforme aux critères du Système v2.")
             else:
                 commentaires.append(f"  • *Décision tactique validée* : Même si la grille théorique envisageait {nom_reco}, votre choix **{action_nom}** maximise l'espérance réelle à la table.")
+        # Priorité 3 : Divergence classique
         else:
             action_verbe = "d'ouvrir" if not dernier_c else "de surenchérir"
             commentaires.append(f"  • *Recommandation Système v2* : Le système conseillait **{nom_reco}**.")
