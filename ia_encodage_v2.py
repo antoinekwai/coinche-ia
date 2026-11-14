@@ -101,7 +101,7 @@ def encoder_encheres(encheres, joueur, atout):
     return v
 
 
-def encoder_situation_v2(main, pli, historique, contrat, joueur, regles, encheres=None):
+def encoder_situation_v2(main, pli, historique, contrat, joueur, regles, encheres=None, belote_declaree=None):
     atout = contrat["atout"]
     ordre = ordre_couleurs(atout)
     autres = [(joueur + k) % 4 for k in (1, 2, 3)]      # gauche, partenaire, droite
@@ -165,9 +165,29 @@ def encoder_situation_v2(main, pli, historique, contrat, joueur, regles, enchere
     # B. Statut certain : La défense a-t-elle 0 atout garanti ? (1 bit : case 282)
     adv_gauche = (joueur + 1) % 4
     adv_droite = (joueur + 3) % 4
+
+    # Déduction par défaut (coupes avérées ou zéro atout dehors)
     defense_sans_atout = (atout in manque[adv_gauche] and atout in manque[adv_droite]) or (atouts_inconnus == 0)
+
+    # Déduction experte par la Belote annoncée :
+    if belote_declaree is not None:
+        j_bel, etape_bel = belote_declaree
+        # etape == 1 : la 1ère carte (R ou D) a été posée, la 2ème est encore en main
+        if etape_bel == 1:
+            if j_bel % 2 == joueur % 2:
+                # La Belote a été annoncée par notre camp (le partenaire) !
+                # Le partenaire a donc obligatoirement la carte complémentaire en main.
+                # Cette carte est comptée dans atouts_inconnus, mais elle n'est PAS chez l'adversaire.
+                atouts_adverses_inconnus = atouts_inconnus - 1
+                if atouts_adverses_inconnus <= 0:
+                    defense_sans_atout = True
+            else:
+                # La Belote a été annoncée par un adversaire : il a obligatoirement un atout !
+                defense_sans_atout = False
+
     defense_purgee_bool = bool(defense_sans_atout)
     x[282] = 1.0 if defense_purgee_bool else 0.0
+    
 
     # C. Contexte précis du pli en cours (7 bits : cases 283 à 289)
     if pli:
