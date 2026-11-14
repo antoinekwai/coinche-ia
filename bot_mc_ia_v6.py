@@ -18,7 +18,7 @@ from ia_encodage_v2 import (
     TAILLE_SITUATION_V2, TAILLE_CARTE_V2
 )
 from detective_v3 import imaginer_v3
-from montecarlo import belote_imaginee, contrat_reussi
+from montecarlo import belote_imaginee, contrat_reussi, bilan_passe
 import bot_mc_ia
 
 FICHIER_V6_RESEAU = "ia_carte_v2_champion.pt"
@@ -62,9 +62,12 @@ class BotMCIAv6(BotMCIA):
         pli = list(pli_actuel) + [(joueur, carte)]
         hist = list(self.historique) + [(joueur, carte)]
         prochain = (joueur + 1) % 4
-        pts_eq, plis_eq = [0, 0], [0, 0]
-
+        # Contexte initial réel : cumul des points et plis passés !
+        pts_faits, plis_faits = bilan_passe(self.historique, atout)
+        pts_eq = list(pts_faits)
+        plis_eq = list(plis_faits)
         while len(hist) < 32:
+
             while len(pli) < 4:
                 j = prochain
                 jouables = cartes_jouables(m[j], pli, atout, j, regles)
