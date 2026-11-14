@@ -52,6 +52,7 @@ class BotMCIAv6(BotMCIA):
         self.nb_simulations = nb_simulations
         self.fichier_reseau = fichier_reseau
         self.ia_v2 = JoueurIA_V2(fichier=fichier_reseau)
+        self.belote_declaree = None
 
     def simuler_avec_ia_v2(self, mains_virtuelles, pli_actuel, atout, contrat, joueur, carte, regles):
         """Déroule la fin de donne avec le réseau V2 d'élite aux 4 places."""
@@ -72,8 +73,9 @@ class BotMCIAv6(BotMCIA):
                 if len(jouables) == 1:
                     c = jouables[0]
                 else:
-                    s = encoder_situation_v2(m[j], pli, hist, contrat, j, regles, self.encheres)
+                    s = encoder_situation_v2(m[j], pli, hist, contrat, j, regles, self.encheres, belote_declaree=self.belote_declaree)
                     def_purgee = bool(s[282] == 1.0)
+
                     vec_c = np.stack([
                         encoder_carte_v2(cand, atout, m[j], hist, pli, def_purgee)
                         for cand in jouables
@@ -112,6 +114,7 @@ class BotMCIAv6(BotMCIA):
         if len(self.historique) < 12:
             self.ia_v2.historique = list(self.historique)
             self.ia_v2.encheres = list(self.encheres) if self.encheres else []
+            self.ia_v2.belote_declaree = self.belote_declaree
             return self.ia_v2.jouer_carte(main, jouables, pli, contrat, joueur, regles)
 
         # Étage 2 : Plis 4 à 8 en Monte-Carlo 40 simulations avec simulateur V2

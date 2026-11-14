@@ -277,6 +277,12 @@ def executer_un_coup_bot_carte(partie, bots):
     bot = bots[j]
     bot.historique = partie["historique"]
     bot.encheres = partie["encheres"]
+    # Transmission de l'annonce légale de Belote si active
+    if partie.get("joueur_belote") is not None and partie.get("belote_etape", 0) > 0:
+        bot.belote_declaree = (partie["joueur_belote"], partie["belote_etape"])
+    else:
+        bot.belote_declaree = None
+
     atout = partie["contrat"]["atout"]
     jouables = cartes_jouables(partie["mains"][j], partie["pli_en_cours"], atout, j, regles)
     carte = bot.jouer_carte(partie["mains"][j], jouables, partie["pli_en_cours"], partie["contrat"], j, regles)

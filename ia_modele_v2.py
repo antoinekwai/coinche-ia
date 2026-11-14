@@ -56,6 +56,7 @@ class JoueurIA_V2(SysV2):
         self.fichier = fichier
         self.historique = []
         self.encheres = []
+        self.belote_declaree = None
 
     def jouer_carte(self, main, jouables, pli, contrat, joueur, regles):
         if len(jouables) == 1:
@@ -65,8 +66,10 @@ class JoueurIA_V2(SysV2):
 
         # 1. Encodage de la situation V2
         s = encoder_situation_v2(
-            main, pli, self.historique, contrat, joueur, regles, self.encheres
+            main, pli, self.historique, contrat, joueur, regles, self.encheres,
+            belote_declaree=self.belote_declaree
         )
+
         defense_purgee = bool(s[282] == 1.0)
 
         # 2. Encodage de chaque carte candidate V2 (avec bits maîtres)
