@@ -41,6 +41,20 @@ def ramasser_mains(mains, donneur):
         paquet.extend(mains[(donneur + k) % 4])
     return paquet
 
+
+CHOIX_COUPE = {"haut": 6, "milieu": 16, "bas": 26}
+
+def coupe_humaine(paquet, choix, rng):
+    """choix : 'haut', 'milieu', 'bas' ou 'aucune'.
+    Imprécision de ±2 cartes, comme une vraie main."""
+    if choix == "aucune":
+        return list(paquet)
+    if choix not in CHOIX_COUPE:
+        raise ValueError(f"Choix de coupe inconnu : {choix}")
+    nb = CHOIX_COUPE[choix] + rng.randint(-2, 2)
+    nb = max(3, min(len(paquet) - 3, nb))
+    return couper(paquet, nb)
+
 if __name__ == "__main__":
     # Test d'intégrité : on doit toujours avoir 32 cartes distinctes
     rng = random.Random(42)
