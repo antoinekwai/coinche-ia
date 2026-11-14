@@ -1,10 +1,11 @@
 """
-detective_v5.py (Version Épurée : Guidage Atout Seul)
-Principe strict : UNE SEULE VARIABLE.
-1. Réservation des atouts du preneur selon son annonce (avec Valet/9 en priorité si dispos).
-2. Déduction exacte des atouts déjà posés sur la table aux plis passés.
-3. TOUT LE RESTE (y compris les As) est mélangé dans le pot commun et distribué au hasard pur.
-4. Validation par rejeu des enchères.
+detective_v5.py (Version 5.1 Réparée & Assouplie)
+Corrections scientifiques clés :
+1. Suppression du bug de sur-allocation d'atouts au Pli 4 (la présence du V ou du 9
+   prend en compte les cartes déjà jouées par le preneur lui-même !).
+2. Assouplissement à 80-90 : réserve 1 seul honneur (V ou 9 au sort) au lieu des deux,
+   laissant la défense espérer un honneur chez le partenaire.
+3. Reste du pot distribué avec respect strict des coupes avérées.
 """
 import random
 from moteur import COULEURS, RANGS
@@ -29,13 +30,13 @@ def trouver_preneur_atout(encheres, atout):
 
     for j, d in encheres:
         if isinstance(d, tuple) and d[1] == atout and (j % 2 == camp_preneur):
-            return j, d[0]  # Sa première annonce personnelle dans la couleur !
+            return j, d[0]
 
     return None, 0
 
 
 def tirage_guide_v5(main_joueur, joueur, historique, encheres, atout, regles):
-    """Distribue les cartes inconnues : réservation d'atouts au preneur, reste 100% aléatoire."""
+    """Distribue les cartes inconnues avec guidage assoupli et réaliste."""
     cartes_vues = set(main_joueur) | {c for _, c in historique}
     inconnues = [(r, c) for c in COULEURS for r in RANGS if (r, c) not in cartes_vues]
 
@@ -59,40 +60,58 @@ def tirage_guide_v5(main_joueur, joueur, historique, encheres, atout, regles):
     autres_dispos = [c for c in inconnues if c[1] != atout]
     random.shuffle(atouts_dispos)
 
-    # 1. RÉSERVATION DES ATOUTS DU PRENEUR (avec déduction des plis passés)
+    # 1. RÉSERVATION DES ATOUTS DU PRENEUR
     if preneur is not None and preneur != joueur and preneur in autres_joueurs:
         if atout not in coupes[preneur]:
-            if valeur_atout >= 130:
+            # Cible de base réaliste
+            if valeur_atout >= 120:
                 cible_depart = 4
-            elif valeur_atout >= 110:
+            elif valeur_atout >= 100:
                 cible_depart = 3
             else:
-                cible_depart = 2
+                cible_depart = 2  # 80-90 : preneur peut avoir seulement 2 ou 3 atouts
 
-            # COMPENSATION PAR LA LONGUEUR :
-            # Si le Valet ET le 9 sont déjà vus (ex: dans ma main de défenseur),
-            # le preneur a nécessairement ouvert avec une couleur 5e ou 6e !
-            v_ou_9_dispo = any(h in ("V", "9") for h, c in atouts_dispos)
-            if not v_ou_9_dispo:
-                cible_depart += 2  # Un preneur sans V ni 9 a au moins 4 ou 5 atouts !
-            atouts_deja_joues = sum(1 for j_h, c_h in historique if j_h == preneur and c_h[1] == atout)
-            cible_restante = max(0, cible_depart - atouts_deja_joues)
+            # Déduction exacte des atouts que le preneur a DÉJÀ posés sur la table
+            atouts_deja_joues_par_preneur = sum(
+                1 for j_h, c_h in historique if j_h == preneur and c_h[1] == atout
+            )
 
+            # Cartes d'honneurs connues de l'observateur (en main ou jouées par autrui)
+            honneurs_vus_hors_preneur = {
+                c[0] for _, c in historique if c[1] == atout and _ != preneur
+            } | {c[0] for c in main_joueur if c[1] == atout}
+
+            # Si l'observateur a vu le V ET le 9 HORS du preneur :
+            # le preneur n'avait aucun honneur majeur -> il a ouvert sur la longueur !
+            if "V" in honneurs_vus_hors_preneur and "9" in honneurs_vus_hors_preneur:
+                cible_depart = max(cible_depart, 4)
+
+            cible_restante = max(0, cible_depart - atouts_deja_joues_par_preneur)
             n_reserve = min(cible_restante, len(atouts_dispos), nb_a_donner[preneur])
 
             atouts_p = []
-            for h in ("V", "9"):
+
+            # Choix des honneurs réservés selon le palier :
+            if valeur_atout >= 100:
+                # Contrats 100+ : Valet et 9 prioritaires
+                honneurs_cibles = ["V", "9"]
+            else:
+                # Contrats 80-90 : un seul honneur prioritaire tiré au sort (souplesse)
+                honneurs_cibles = [random.choice(["V", "9"])]
+
+            for h in honneurs_cibles:
                 if (h, atout) in atouts_dispos and len(atouts_p) < n_reserve:
                     atouts_dispos.remove((h, atout))
                     atouts_p.append((h, atout))
 
+            # Compléter la réserve d'atouts avec les atouts disponibles au hasard
             while len(atouts_p) < n_reserve and atouts_dispos:
                 atouts_p.append(atouts_dispos.pop())
 
             mains[preneur].extend(atouts_p)
             nb_a_donner[preneur] -= len(atouts_p)
 
-    # 2. TOUT LE RESTE AU HASARD PUR (les As sont dans autres_dispos, traités comme n'importe quelle carte)
+    # 2. TOUT LE RESTE DISTRIBUÉ AU HASARD
     pot_restant = atouts_dispos + autres_dispos
     random.shuffle(pot_restant)
 
@@ -108,7 +127,7 @@ def tirage_guide_v5(main_joueur, joueur, historique, encheres, atout, regles):
 
 def imaginer_v5(main, joueur, historique, encheres, atout, regles,
                 tolerance=0.1, max_essais=150):
-    """Détective v5 : Tirage guidé par les atouts seuls + rejeu des enchères."""
+    """Détective v5.1 : Tirage guidé assoupli + rejeu des enchères."""
     STATS_V5["appels"] += 1
     donneur = (encheres[0][0] - 1) % 4 if encheres else 0
     meilleure, meilleur_diff = None, 999
