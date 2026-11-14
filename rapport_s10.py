@@ -9,10 +9,10 @@ def section_simulateur(doc):
     titre(doc, "10. Le simulateur en ligne & Mode d'entraînement")
     paragraphe(doc, "Pour permettre à chacun de s'entraîner, de vérifier ces principes et de mesurer son niveau face à l'IA, "
                "l'ensemble de ces travaux de recherche a été intégré dans une application web interactive complète, "
-               "accessible gratuitement sur tout navigateur (ordinateur, tablette, smartphone) :")
+               "accessible gratuitement sur tout navigateur :")
 
     encadre(doc, "🌐 **Accès direct au jeu en ligne** : **https://coinche-ia.onrender.com**\n\n"
-            "*(Hébergé en accès libre. Lors de la première visite, le serveur peut mettre une trentaine de secondes à se réveiller).*")
+            "*(Hébergement libre : réveil en ~30s lors de la première visite).*")
 
     titre(doc, "Fonctionnalités de l'outil d'entraînement", 2)
     puces(doc, [

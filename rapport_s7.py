@@ -41,7 +41,7 @@ def section_carte(doc):
         ]
     )
     doc.add_page_break()
-    encadre(doc, "💡 **Enseignement capital pour la table** : **62 % du sort d'une donne de coinche se joue aux Plis 1 et 2 !** "
+    encadre(doc, "**ENSEIGNEMENT CAPITAL POUR LA TABLE** : 62 % du sort d'une donne pour la table** : **62 % du sort d'une donne de coinche se joue aux Plis 1 et 2 !** "
             "Contrairement à une idée reçue, les fautes décisives ne se produisent pas en fin de manche (où tout le monde sait compter les atouts), "
             "mais dès l'entame et le premier retour de main. Une mauvaise entame ou un partenaire passif au départ ne se rattrapent jamais.")
 
@@ -58,7 +58,7 @@ def section_carte(doc):
     titre(doc, "La convention indispensable : le départage As-10", 2)
     paragraphe(doc, "Sans règle explicite, un moteur Monte-Carlo ou un joueur hésitant tire à pile ou face (50/50) entre défausser l'As ou le 10 "
                "sur une tenue As-10, car l'écart direct n'est que de 1 point. Pour le partenaire, cette hésitation est désastreuse.")
-    encadre(doc, "📜 **Règle de départage de la séquence maîtresse** : En attaque, sur une défausse où le pli est garanti à notre camp "
+    encadre(doc, "**RÈGLE OFFICIELLE : Départage de la séquence maîtresse** : En attaque de la séquence maîtresse** : En attaque, sur une défausse où le pli est garanti à notre camp "
             "(en 4e position ou sur maître incontesté du preneur en 3e position), si le joueur défausse dans une couleur où il détient une séquence maîtresse "
             "(As-10, As-10-Roi, ou 10-Roi si l'As est tombé), il fournit impérativement **la carte la plus haute**. "
             "À l'inverse, en défense sur pli perdu, il jette **la plus basse** pour sauver 1 point.")

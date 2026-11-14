@@ -5,7 +5,7 @@ Annexe : Fiche mémo pour la table (Version 2.0 actualisée)
 from rapport_outils import titre, paragraphe, tableau, encadre
 from fiche_ouvertures import OUVERTURES
 
-T = 8   # taille du texte des tableaux de la fiche
+T = 7.5   # taille du texte des tableaux de la fiche
 
 
 def annexe_fiche(doc):
@@ -25,9 +25,7 @@ def annexe_fiche(doc):
     ], largeurs=[4.5, 12], taille=T)
 
     tableau(doc, ["Situation", "Règle tactique"], [
-        ["Les adversaires parlent", "Monter jusqu'au **niveau de l'équipe + 20 à 30 points** "
-                                    "(la belote peut s'ajouter), la marge ne faisant jamais "
-                                    "dépasser **130**."],
+        ["Les adversaires parlent", "Surenchérir à 110+ exige : **>= 5 atouts**, OU **4 atouts + chicane**, OU **Belote en main (+20)**, OU **soutien du partenaire**. Sinon Passe."],
         ["Coincher", "On ne coinche que ce que l'on bat soi-même ! Force dans l'atout adverse : "
                      "**V = 2**, 9 (avec 3 atouts) = 1, chaque atout au-delà du 2e = 1, R ou D = 1. "
                      "Coincher à **4 contre 80**, 3 contre 100, 2 contre 120. Jamais de coinche spéculative."],
@@ -46,5 +44,5 @@ def annexe_fiche(doc):
                                               "**je rejoue sa couleur** pour lui donner la coupe."],
     ], largeurs=[4.5, 12], taille=T)
 
-    encadre(doc, "⚠️ **Pièges classiques** : le 9 sans le Valet est très faible ; un 10 sec vaut moins qu'une petite carte ; "
+    encadre(doc, "**PIÈGES CLASSIQUES** : le 9 sans le Valet est très faible ; un 10 sec vaut moins qu'une petite carte ; "
             "purger systématiquement au Pli 2 est une erreur (-53 pts) ; un capot ne s'annonce jamais sur un compte de plis théorique.")

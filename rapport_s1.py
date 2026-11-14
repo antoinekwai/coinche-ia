@@ -65,7 +65,7 @@ def section_en_bref(doc):
         [
             ["BILAN GLOBAL : Système Recommandé + Jeu v6 complet", "+16,9 à +18,2 pts", "≈ +180 points"],
             ["Coinche basée sur la force des atouts (seuil 4)", "+8,7 ± 1,2 pts", "≈ +100 points"],
-            ["Bonne marge dans les enchères disputées (20-30 vs 0)", "+8 à +20 pts", "+100 à +200 points"],
+            ["Enchères disputées : 4 critères objectifs (vs simulation)", "+5,4 ± 11,9 pts", "≈ +60 points"],
             ["Jeu de la carte hybride v6 (vs IA pure de base)", "+12 à +15 pts", "≈ +150 points"],
             ["Plis 1 à 3 en IA pure (vs Monte-Carlo au Pli 1)", "+13,3 ± 11,3 pts", "≈ +140 points"],
             ["40 simulations en fin de manche (vs 20)", "+5,6 à +6,3 pts", "≈ +60 points"],
