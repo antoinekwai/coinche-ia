@@ -15,7 +15,11 @@
         .score-bar { background: rgba(0,0,0,0.7); padding: 6px 14px; border-radius: 20px; font-size: 13px; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; gap: 8px; backdrop-filter: blur(4px); }
         .score-bar span { font-weight: bold; color: #74c69d; }
 
-        .contract-badge { background: rgba(0,0,0,0.85); border: 2px solid #ffd166; padding: 5px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; color: #fff; display: none; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+        .contract-badge { background: rgba(0,0,0,0.85); border: 2px solid #ffd166; padding: 5px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; color: #fff; display: none; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); position: absolute; left: 50%; transform: translateX(-50%); z-index: 15; }
+
+        /* Verrouillage absolu de la zone Est / Ouest (zéro sautillement quand les cartes diminuent) */
+        #area-west, #area-east { width: 85px; min-width: 85px; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2; }
+        .hand-side { height: 180px; display: flex; align-items: center; justify-content: center; }
         .contract-badge.coinche { border-color: #e63946; background: rgba(180, 20, 30, 0.95); }
 
         .info-bar { background: rgba(0,0,0,0.7); padding: 6px 14px; border-radius: 20px; font-size: 12px; text-align: right; border: 1px solid rgba(255,255,255,0.2); max-width: 380px; backdrop-filter: blur(4px); }
@@ -110,19 +114,82 @@
         .hand-opponent-v .card-back-wrap { margin-top: -46px; }
         .hand-opponent-v .card-back-wrap:first-child { margin-top: 0; }
 
-        /* PLI CENTRAL */
-        #center-trick { width: 330px; height: 250px; background: rgba(0,0,0,0.25); border-radius: 20px; border: 2px dashed rgba(255,255,255,0.2); position: relative; }
-        .trick-card { position: absolute; display: flex; flex-direction: column; align-items: center; transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1); }
-        .trick-card.just-played.pos-south { animation: slideFromSouth 0.2s ease-out; }
-        .trick-card.just-played.pos-west  { animation: slideFromWest 0.2s ease-out; }
-        .trick-card.just-played.pos-north { animation: slideFromNorth 0.2s ease-out; }
-        .trick-card.just-played.pos-east  { animation: slideFromEast 0.2s ease-out; }
+        /* BANDEAU DE COUPE FLOTTANT AU CENTRE */
+        #cut-controls {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 50;
+            background: rgba(18, 22, 28, 0.96);
+            border: 2px solid #ffd166;
+            border-radius: 16px;
+            padding: 16px 22px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.85);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            color: #f8f9fa;
+        }
+        #cut-controls .cut-title {
+            font-size: 15px;
+            font-weight: bold;
+            color: #ffd166;
+            letter-spacing: 0.5px;
+        }
+        #cut-controls .cut-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        #cut-controls .btn-cut {
+            background: #2b303c;
+            color: #fff;
+            border: 1px solid #495057;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        #cut-controls .btn-cut:hover {
+            background: #ffd166;
+            color: #12161c;
+            border-color: #ffd166;
+            transform: translateY(-2px);
+        }
 
-        @keyframes slideFromSouth { 0% { transform: translate(-50%, 40px) scale(0.9); opacity: 0; } 100% { transform: translate(-50%, 0) scale(1); opacity: 1; } }
-        @keyframes slideFromWest  { 0% { transform: translate(-40px, -50%) scale(0.9); opacity: 0; } 100% { transform: translate(0, -50%) scale(1); opacity: 1; } }
-        @keyframes slideFromNorth { 0% { transform: translate(-50%, -40px) scale(0.9); opacity: 0; } 100% { transform: translate(-50%, 0) scale(1); opacity: 1; } }
-        @keyframes slideFromEast  { 0% { transform: translate(40px, -50%) scale(0.9); opacity: 0; } 100% { transform: translate(0, -50%) scale(1); opacity: 1; } }
+        /* PLI CENTRAL : ANCRAGE ABSOLU AU CENTRE (ZÉRO SAUTILLEMENT) */
+        .middle-row { width: 100%; display: flex; justify-content: space-between; align-items: center; position: relative; height: 260px; }
+        #center-trick { width: 330px; height: 250px; background: rgba(0,0,0,0.25); border-radius: 20px; border: 2px dashed rgba(255,255,255,0.2); position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 5; }
+
+        /* Bloc des enchères flottant : n'écarte plus jamais le tapis ni la main */
+        #bid-controls { position: absolute; top: -52px; left: 50%; transform: translateX(-50%); z-index: 20; background: rgba(18, 21, 26, 0.95); padding: 6px 14px; border-radius: 25px; border: 1.5px solid #ffd166; box-shadow: 0 4px 15px rgba(0,0,0,0.6); display: flex; gap: 8px; align-items: center; }
+        #area-south { position: relative; display: flex; flex-direction: column; align-items: center; }
+        .trick-card { position: absolute; display: flex; flex-direction: column; align-items: center; transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1); }
+        .trick-card.just-played.pos-south { animation: slideFromSouth 0.38s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .trick-card.just-played.pos-west  { animation: slideFromWest 0.38s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .trick-card.just-played.pos-north { animation: slideFromNorth 0.38s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .trick-card.just-played.pos-east  { animation: slideFromEast 0.38s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+        @keyframes slideFromSouth { 0% { transform: translate(-50%, 50px) scale(0.88); opacity: 0; } 100% { transform: translate(-50%, 0) scale(1); opacity: 1; } }
+        @keyframes slideFromWest  { 0% { transform: translate(-50px, -50%) scale(0.88); opacity: 0; } 100% { transform: translate(0, -50%) scale(1); opacity: 1; } }
+        @keyframes slideFromNorth { 0% { transform: translate(-50%, -50px) scale(0.88); opacity: 0; } 100% { transform: translate(-50%, 0) scale(1); opacity: 1; } }
+        @keyframes slideFromEast  { 0% { transform: translate(50px, -50%) scale(0.88); opacity: 0; } 100% { transform: translate(0, -50%) scale(1); opacity: 1; } }
+
+        /* Animation de ramassage feutrée et visible (500ms) */
+        .sweep-to-south { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important; transform: translate(-50%, 160px) scale(0.35) !important; opacity: 0 !important; }
+        .sweep-to-north { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important; transform: translate(-50%, -160px) scale(0.35) !important; opacity: 0 !important; }
+        .sweep-to-west  { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important; transform: translate(-200px, -50%) scale(0.35) !important; opacity: 0 !important; }
+        .sweep-to-east  { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important; transform: translate(200px, -50%) scale(0.35) !important; opacity: 0 !important; }
         .trick-card span { font-size: 10px; margin-top: 3px; background: rgba(0,0,0,0.7); padding: 1px 5px; border-radius: 4px; }
+
+        /* Animation de ramassage du pli vers le vainqueur */
+        .sweep-to-south { transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important; transform: translate(-50%, 140px) scale(0.45) !important; opacity: 0 !important; }
+        .sweep-to-north { transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important; transform: translate(-50%, -140px) scale(0.45) !important; opacity: 0 !important; }
+        .sweep-to-west  { transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important; transform: translate(-180px, -50%) scale(0.45) !important; opacity: 0 !important; }
+        .sweep-to-east  { transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important; transform: translate(180px, -50%) scale(0.45) !important; opacity: 0 !important; }
 
         .pos-south { bottom: 8px; left: 50%; transform: translateX(-50%); }
         .pos-north { top: 8px; left: 50%; transform: translateX(-50%); }
@@ -133,7 +200,11 @@
         .trick-order-badge { position: absolute; top: -6px; right: -6px; background: #2ec4b6; color: #fff; font-size: 10px; font-weight: 900; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1.5px solid #1a1e24; z-index: 5; }
         .trick-order-badge.first { background: #ffd166; color: #111; }
 
-        #replay-bar { position: absolute; bottom: 135px; background: rgba(0,0,0,0.9); padding: 6px 14px; border-radius: 20px; display: none; gap: 10px; align-items: center; border: 1px solid #74c69d; z-index: 25; font-size: 13px; }
+        #replay-bar { position: absolute; bottom: 185px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.92); padding: 6px 16px; border-radius: 20px; display: none; gap: 10px; align-items: center; border: 1.5px solid #ffd166; z-index: 35; font-size: 13px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
+
+        /* Mains d'Est et Ouest en mode Replay : chevauchement serré pour ne jamais déborder */
+        .hand-side .card-wrap.mini { margin-left: -22px; }
+        .hand-side .card-wrap.mini:first-child { margin-left: 0; }
         #replay-bar button { padding: 4px 10px; font-size: 12px; background: #2ec4b6; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
 
         /* CARTES DU JOUEUR (GRANDES & SURVOL FLUIDE) */
@@ -182,7 +253,13 @@
         button.btn-danger:disabled { background: #555; cursor: not-allowed; opacity: 0.5; }
 
         /* PROFESSEUR : MASQUÉ PAR DÉFAUT PENDANT LE JEU */
-        #professor-panel { width: 440px; background: #111418; border-left: 2px solid #2d6a4f; display: none; flex-direction: column; padding: 16px; overflow-y: auto; position: relative; animation: slideInPanel 0.3s ease-out; }
+        #professor-panel { width: 420px; min-width: 420px; background: #111418; border-left: 2px solid #2d6a4f; display: none; flex-direction: column; padding: 16px; overflow-y: auto; position: relative; animation: slideInPanel 0.3s ease-out; z-index: 50; }
+        
+        /* En mode analyse, adapter la main d'Est pour qu'elle reste toujours visible */
+        #professor-panel[style*="display: flex"] ~ #table-container #area-east,
+        body:has(#professor-panel[style*="display: flex"]) #area-east {
+            margin-right: 10px;
+        }
         @keyframes slideInPanel { from { transform: translateX(100%); } to { transform: translateX(0); } }
         #professor-panel h2 { font-size: 17px; color: #74c69d; margin: 0; }
         
@@ -359,6 +436,17 @@
                 <div id="hand-west" class="hand-side"></div>
             </div>
 
+            <!-- BANDEAU DE COUPE AU CENTRE -->
+            <div id="cut-controls">
+                <div class="cut-title">✂️ À vous de couper le jeu !</div>
+                <div class="cut-buttons">
+                    <button class="btn-cut" onclick="actionCouper('haut')">🃏 Haut (~6)</button>
+                    <button class="btn-cut" onclick="actionCouper('milieu')">🎴 Milieu (~16)</button>
+                    <button class="btn-cut" onclick="actionCouper('bas')">🃏 Bas (~26)</button>
+                    <button class="btn-cut" style="background:#3d2429; border-color:#e63946;" onclick="actionCouper('aucune')">✋ Ne pas couper</button>
+                </div>
+            </div>
+
             <div id="center-trick"></div>
 
             <div class="player-area" id="area-east">
@@ -430,7 +518,7 @@
         </div>
 
         <div class="btn-sticky-container">
-            <button class="btn-next-donne" onclick="fermerPanneauProfesseur(); nouvelleDonne();">Donne Suivante ➔</button>
+            <button class="btn-next-donne" onclick="nouvelleDonneDepuisProfesseur();">Donne Suivante ➔</button>
         </div>
     </div>
 
@@ -579,6 +667,7 @@
         }
 
         let distributionEnCours = false;
+        let coupHumainEnCours = false; // Verrou anti-double clic absolu
 
         
         function ouvrirZoomDernierPli() {
@@ -615,6 +704,9 @@
         }
 
         async function actualiser() {
+            // GEL TOTAL : tant que l'écran d'accueil est présent, pas d'annonces de bots ni de voix !
+            const modalW = document.getElementById('modal-welcome');
+            if (modalW && modalW.style.display !== 'none') return;
             if (distributionEnCours) return; // Verrou anti-collision : ne pas toucher à l'écran pendant la distribution !
             try {
                 const res = await fetch('/api/etat');
@@ -668,11 +760,12 @@
                     declencherBandeauCoinche();
                     speakVoice("Coinche !");
                 }
-                if (aBelote && !beloteVocaleFaite) {
+                const phaseJeu = (etatJeu.etat === 'jeu' || etatJeu.etat === 'pli_termine');
+                if (phaseJeu && aBelote && !beloteVocaleFaite) {
                     beloteVocaleFaite = true;
                     speakVoice("Belote !");
                 }
-                if (aRebelote && !rebeloteVocaleFaite) {
+                if (phaseJeu && aRebelote && !rebeloteVocaleFaite) {
                     rebeloteVocaleFaite = true;
                     speakVoice("Rebelote !");
                 }
@@ -791,6 +884,12 @@
                 btnCoinche.disabled = !Boolean(contratExiste && (etatJeu.contrat.joueur % 2 !== 0) && !etatJeu.contrat.coinche);
             } else {
                 bidControls.style.display = 'none';
+            }
+
+            // Affichage du panneau de coupe
+            const cutControls = document.getElementById('cut-controls');
+            if (cutControls) {
+                cutControls.style.display = (etatJeu.etat === 'coupe') ? 'flex' : 'none';
             }
 
             // Historique
@@ -924,9 +1023,18 @@
             document.getElementById('replay-bar').style.display = 'flex';
         }
 
-        function fermerPanneauProfesseur() {
+                function fermerPanneauProfesseur() {
             document.getElementById('professor-panel').style.display = 'none';
-            quitterReplay();
+            if (typeof quitterModeReplay === 'function') {
+                quitterModeReplay();
+            }
+        }
+
+        function nouvelleDonneDepuisProfesseur() {
+            fermerPanneauProfesseur();
+            const modalDonne = document.getElementById('modal-donne');
+            if (modalDonne) modalDonne.style.display = 'none';
+            nouvelleDonne();
         }
 
         function nouvelleDonneDepuisModal() {
@@ -940,9 +1048,13 @@
             dernierPliCle = clePli;
 
             const center = document.getElementById('center-trick');
-            center.innerHTML = '';
             const posClasses = ["pos-south", "pos-west", "pos-north", "pos-east"];
-            
+
+            // En Replay ou si le pli est vide : vider totalement
+            if (cartesPli.length === 0 || isReplay) {
+                center.innerHTML = '';
+            }
+
             cartesPli.forEach(([nom, carteStr], ordreIndex) => {
                 const r = carteStr.slice(0, -1);
                 const c = carteStr.slice(-1);
@@ -954,21 +1066,51 @@
                     orderBadge = `<div class="trick-order-badge ${isFirst ? 'first' : ''}">${ordreIndex + 1}</div>`;
                 }
 
+                // Vérifier si cette carte est déjà présente sur le tapis (posée à 0 ms par Sud)
+                const dejaPosee = center.querySelector(`[data-carte="${carteStr}"][data-j="${jIndex}"]`);
+                if (dejaPosee) {
+                    // La carte est déjà là : on lui enlève juste l'animation pour qu'elle reste immobile
+                    dejaPosee.classList.remove('just-played');
+                    return;
+                }
+
                 const isLastPlayed = (!isReplay && ordreIndex === cartesPli.length - 1);
                 const animClass = isLastPlayed ? 'just-played' : '';
-                center.innerHTML += `
-                    <div class="trick-card ${posClasses[jIndex]} ${animClass}">
-                        <div style="position:relative;">
-                            ${orderBadge}
-                            ${renderCardHTML(r, c)}
-                        </div>
-                        <span>${nom}</span>
+                const wrapper = document.createElement('div');
+                wrapper.className = `trick-card ${posClasses[jIndex]} ${animClass}`;
+                wrapper.setAttribute('data-carte', carteStr);
+                wrapper.setAttribute('data-j', String(jIndex));
+                wrapper.innerHTML = `
+                    <div style="position:relative;">
+                        ${orderBadge}
+                        ${renderCardHTML(r, c)}
                     </div>
+                    <span>${nom}</span>
                 `;
+                center.appendChild(wrapper);
             });
 
             if (infoTermine) {
-                center.innerHTML += `<div class="trick-winner-banner">🏆 Pli pour ${infoTermine.nom_gagnant || infoTermine.gagnant}</div>`;
+                const nomVainqueur = infoTermine.nom_gagnant || infoTermine.gagnant || "";
+                const ancienneBaniere = center.querySelector('.trick-winner-banner');
+                if (ancienneBaniere) ancienneBaniere.remove();
+                center.insertAdjacentHTML('beforeend', `<div class="trick-winner-banner">🏆 Pli pour ${nomVainqueur}</div>`);
+
+                // Le ramassage s'anime UNIQUEMENT pendant la vraie partie, JAMAIS pendant le Replay d'analyse !
+                if (!isReplay) {
+                    let sweepClass = 'sweep-to-south';
+                    if (nomVainqueur.includes("Ouest")) sweepClass = 'sweep-to-west';
+                    else if (nomVainqueur.includes("Nord") || nomVainqueur.includes("Partenaire")) sweepClass = 'sweep-to-north';
+                    else if (nomVainqueur.includes("Est")) sweepClass = 'sweep-to-east';
+
+                    setTimeout(() => {
+                        const cards = center.querySelectorAll('.trick-card');
+                        if (cards.length > 0 && typeof playDealSwooshSound === 'function') {
+                            playDealSwooshSound();
+                        }
+                        cards.forEach(card => card.classList.add(sweepClass));
+                    }, 900);
+                }
             }
         }
 
@@ -1105,7 +1247,7 @@
                         boucleActive = false;
                         await actualiser();
                     }
-                }, 2200);
+                }, 1600);
             }
         }
 
@@ -1126,27 +1268,34 @@
         }
 
         async function jouerCarte(rang, couleur) {
+            if (coupHumainEnCours || distributionEnCours || etatJeu.tour !== 0 || etatJeu.etat !== 'jeu') {
+                return;
+            }
+            coupHumainEnCours = true;
             getAudioContext();
             playCardSound();
 
-            // RETOUR VISUEL IMMÉDIAT (0 ms) : on pose la carte de suite sur le tapis
-            const center = document.getElementById('center-trick');
             const carteStr = `${rang}${couleur}`;
-            const nomSud = "Vous (Sud)";
-            
-            // Retirer visuellement la carte de la main Sud tout de suite
+            const southHand = document.getElementById('hand-south');
+            if (southHand) southHand.style.pointerEvents = 'none';
+
+            // RETOUR INSTANTANÉ (0 ms) : masquer en main ET poser tout de suite au centre
             const carteEl = document.querySelector(`.card-wrap[title="${carteStr}"]`);
             if (carteEl) carteEl.style.display = 'none';
 
-            // Ajouter la carte au centre immédiatement
-            center.innerHTML += `
-                <div class="trick-card pos-south just-played">
+            const center = document.getElementById('center-trick');
+            if (center && !center.querySelector(`[data-carte="${carteStr}"]`)) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'trick-card pos-south just-played';
+                wrapper.setAttribute('data-carte', carteStr);
+                wrapper.setAttribute('data-j', '0');
+                wrapper.innerHTML = `
                     <div style="position:relative;">${renderCardHTML(rang, couleur)}</div>
-                    <span>${nomSud}</span>
-                </div>
-            `;
+                    <span>Vous (Sud)</span>
+                `;
+                center.appendChild(wrapper);
+            }
 
-            // Requête serveur en arrière-plan
             try {
                 await fetch('/api/jouer_carte', {
                     method: 'POST',
@@ -1155,11 +1304,24 @@
                 });
             } catch(e) {
                 console.error("Erreur jouer_carte:", e);
+            } finally {
+                coupHumainEnCours = false;
+                if (southHand) southHand.style.pointerEvents = 'auto';
+                await actualiser();
             }
-            await actualiser();
         }
 
-        // DISTRIBUTION AUTHENTIQUE ET POSÉE : 3 - 2 - 3 DANS LE SENS HORAIRE
+        async function actionCouper(choix) {
+            const cutControls = document.getElementById('cut-controls');
+            if (cutControls) cutControls.style.display = 'none';
+            const promesse = fetch('/api/couper', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ choix: choix })
+            });
+            animerDistribution(promesse);
+        }
+
         async function animerDistribution(promesseDonne) {
             distributionEnCours = true;
 
@@ -1175,6 +1337,7 @@
             stage.innerHTML = `<div class="deck-center"><img src="${CARD_BACK_URL}" alt="Paquet"></div>`;
 
             await promesseDonne;
+            coincheVocaleFaite = false; // Réactivé uniquement sur état serveur propre
             const res = await fetch('/api/etat');
             etatJeu = await res.json();
 
@@ -1276,18 +1439,17 @@
             }, 300);
         }
 
-        async function nouvelleDonne() {
+         async function nouvelleDonne() {
             boucleActive = false;
             indexReplayPli = null;
             pliSelectionne = null;
             dernierPliCle = "";
             modalDonneAffichee = false;
-            coincheVocaleFaite = false;
             beloteVocaleFaite = false;
             rebeloteVocaleFaite = false;
             if ('speechSynthesis' in window) window.speechSynthesis.cancel();
 
-            // FERMETURE ET NETTOYAGE TOTAL DU MODE PROFESSEUR ET DU REPLAY
+            // Nettoyage UI
             const profPanel = document.getElementById('professor-panel');
             if (profPanel) profPanel.style.display = 'none';
             const repBar = document.getElementById('replay-bar');
@@ -1297,14 +1459,20 @@
             const lastW = document.getElementById('last-trick-widget');
             if (lastW) lastW.style.display = 'none';
 
-            // EFFACEMENT IMMÉDIAT DE TOUTES LES MAINS SUR LE TAPIS
+            // Effacer les cartes
             document.getElementById('hand-south').innerHTML = '';
             document.getElementById('hand-north').innerHTML = '';
             document.getElementById('hand-west').innerHTML = '';
             document.getElementById('hand-east').innerHTML = '';
 
-            const promesse = fetch('/api/nouvelle_donne', { method: 'POST' });
-            animerDistribution(promesse);
+            const res = await fetch('/api/nouvelle_donne', { method: 'POST' });
+            const data = await res.json();
+            
+            if (data.etat === 'coupe') {
+                await actualiser();
+            } else {
+                animerDistribution(Promise.resolve());
+            }
         }
 
         function actionCoincheOuSurcoinche() {
