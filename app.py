@@ -3,10 +3,12 @@ import os
 import json
 import time
 import uuid
+import random
 from flask import Flask, render_template, jsonify, request, session
 from regles import REGLES_STANDARD
-from moteur import distribuer, cartes_jouables, gagnant_pli, points, equipe_belote, decompte
+from moteur import cartes_jouables, gagnant_pli, points, equipe_belote, decompte, COULEURS, RANGS
 from jouer import trier_main
+import paquet
 from bot_mc_ia import BotMCIA
 from bot_mc_ia_v6 import BotMCIAv6, FICHIER_V6_RESEAU
 from ia_modele_v2 import JoueurIA_V2
@@ -17,20 +19,16 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "coinche-cle-secrete-production-2026")
 
 
-# Grand Maître utilise notre champion officiel : BotMCIAv6 (Réseau V2 + MC 40s)
 class BotGrandMaitre(BotMCIAv6):
     nom = "Grand Maître (v6 Réseau V2)"
 
 
 def obtenir_bots(niveau):
     if niveau == "normal":
-        # IA Rapide utilise nativement le Réseau V2 champion (324 entrées)
         return [None, JoueurIA_V2(fichier=FICHIER_V6_RESEAU), JoueurIA_V2(fichier=FICHIER_V6_RESEAU), JoueurIA_V2(fichier=FICHIER_V6_RESEAU)]
-    # Grand Maître par défaut : BotMCIAv6
     return [None, BotGrandMaitre(), BotGrandMaitre(), BotGrandMaitre()]
 
 
-# --- GESTIONNAIRE DE SESSIONS ISOLÉES PAR JOUEUR ---
 SESSIONS_UTILISATEURS = {}
 
 
@@ -38,7 +36,7 @@ def creer_partie_vierge():
     return {
         "scores": [0, 0],
         "donneur": 0,
-        "etat": "annonces",      # "annonces", "jeu", "pli_termine", "debrief"
+        "etat": "annonces",
         "mains": [[], [], [], []],
         "main_initiale_humain": [],
         "mains_initiales_toutes": [[], [], [], []],
@@ -53,6 +51,10 @@ def creer_partie_vierge():
         "joueur_belote": None,
         "belote_etape": 0,
         "match_termine": False,
+        "paquet": None,
+        "plis_donne": [],
+        "coupeur": None,
+        "attente_coupe_humain": False,
         "bilan_match": None,
         "stats_match": {
             "donnes_jouees": 0,
@@ -76,13 +78,11 @@ def creer_partie_vierge():
 
 
 def obtenir_session():
-    """Récupère la session du joueur connecté ou lui en initialise une nouvelle."""
     if "sid" not in session:
         session["sid"] = uuid.uuid4().hex
     sid = session["sid"]
     maintenant = time.time()
 
-    # Nettoyage automatique des sessions inactives (> 2h) pour libérer la RAM Render
     if len(SESSIONS_UTILISATEURS) > 40:
         expires = [s for s, d in SESSIONS_UTILISATEURS.items() if maintenant - d["ts"] > 7200]
         for s in expires:
@@ -104,7 +104,6 @@ def nom_joueur(j):
 
 
 def calculer_force_camp_donne(mains_camp):
-    """Calcule le Potentiel de Maître d'un camp (16 cartes réunies, score 0 à 67)."""
     cartes_camp = set(mains_camp[0]) | set(mains_camp[1])
     max_force = 0
     for coul in ("♠", "♥", "♦", "♣"):
@@ -128,11 +127,35 @@ def joueur_avec_belote(mains, atout):
     return None
 
 
+def preparer_paquet_si_besoin(partie):
+    if partie.get("paquet") is None or len(partie.get("paquet", [])) != 32:
+        p = [(r, c) for c in COULEURS for r in RANGS]
+        random.shuffle(p)
+        partie["paquet"] = p
+
+
 def demarrer_nouvelle_donne(partie):
-    mains = distribuer()
-    partie["mains"] = mains
-    partie["main_initiale_humain"] = list(mains[0])
-    partie["mains_initiales_toutes"] = [list(m) for m in mains]
+    preparer_paquet_si_besoin(partie)
+    coupeur = (partie["donneur"] + 3) % 4
+    partie["coupeur"] = coupeur
+    partie["plis_donne"] = []
+
+    if coupeur == 0:
+        partie["etat"] = "coupe"
+        partie["attente_coupe_humain"] = True
+        partie["message"] = f"{nom_joueur(partie['donneur'])} donne. C'est à VOUS de couper le jeu !"
+        return
+
+    partie["paquet"] = paquet.coupe_aleatoire(partie["paquet"], random.Random())
+    finaliser_distribution_apres_coupe(partie)
+
+
+def finaliser_distribution_apres_coupe(partie):
+    partie["attente_coupe_humain"] = False
+    mains = paquet.distribuer_323(partie["paquet"], donneur=partie["donneur"])
+    partie["mains"] = [mains[i] for i in range(4)]
+    partie["main_initiale_humain"] = list(partie["mains"][0])
+    partie["mains_initiales_toutes"] = [list(m) for m in partie["mains"]]
     partie["contrat"] = None
     partie["encheres"] = []
     partie["pli_en_cours"] = []
@@ -165,14 +188,14 @@ def executer_un_coup_bot_enchere(partie, bots):
 
 def traiter_decision_enchere(partie, bots, joueur, dec):
     regles = REGLES_STANDARD
-    # Garde-fou : toute annonce illégale (bot ou humain) est refusée et traitée comme une passe
     if isinstance(dec, tuple) and not annonce_valide(dec, partie["contrat"], regles):
         print(f"⚠️ ENCHÈRE ILLÉGALE refusée : {nom_joueur(joueur)} proposait {dec} sur {partie['contrat']}", flush=True)
         dec = "passe"
+
     if dec == "coinche" and partie["contrat"] and partie["contrat"]["joueur"] % 2 != joueur % 2:
         partie["contrat"]["coinche"] = 1
         partie["encheres"].append((joueur, "coinche"))
-        partie["bulles"][joueur] = "🔥 COINCHE !"
+        partie["bulles"][joueur] = "⚡ COINCHE !"
         partie["message"] = f"{nom_joueur(joueur)} COINCHE le contrat !"
         terminer_encheres(partie)
         return
@@ -193,7 +216,6 @@ def traiter_decision_enchere(partie, bots, joueur, dec):
             if isinstance(d_prec, tuple) and d_prec[1] == coul and (j_prec % 2 == joueur % 2):
                 declarant = j_prec
                 break
-
         partie["contrat"] = {"valeur": val, "atout": coul, "joueur": declarant, "dernier_encherisseur": joueur, "coinche": 0, "capot": capot}
         partie["encheres"].append((joueur, dec))
         partie["bulles"][joueur] = f"{'CAPOT' if capot else val} {coul}"
@@ -211,6 +233,7 @@ def traiter_decision_enchere(partie, bots, joueur, dec):
     if partie["contrat"] is None and len(partie["encheres"]) == 4:
         partie["etat"] = "passe_generale"
         partie["message"] = "4 passes générales ! Aucun preneur, nouvelle donne dans un instant..."
+        partie["paquet"] = paquet.ramasser_mains(partie["mains"], partie["donneur"])
         partie["donneur"] = (partie["donneur"] + 1) % 4
         return
 
@@ -230,7 +253,6 @@ def terminer_encheres(partie):
     for k in range(4):
         if "COINCHE" not in partie["bulles"][k]:
             partie["bulles"][k] = ""
-
     partie["tour"] = (partie["donneur"] + 1) % 4
     c_nom = "CAPOT" if partie["contrat"]["capot"] else partie["contrat"]["valeur"]
     coinche_txt = " (COINCHÉ)" if partie["contrat"]["coinche"] else ""
@@ -243,10 +265,10 @@ def verifier_belote_pose(partie, joueur, carte):
     if joueur == partie["joueur_belote"] and carte in [("R", atout), ("D", atout)]:
         if partie["belote_etape"] == 0:
             partie["belote_etape"] = 1
-            partie["bulles"][joueur] = "🔔 Belote !"
+            partie["bulles"][joueur] = "📢 Belote !"
         elif partie["belote_etape"] == 1:
             partie["belote_etape"] = 2
-            partie["bulles"][joueur] = "🔔 Rebelote !"
+            partie["bulles"][joueur] = "📢 Rebelote !"
 
 
 def executer_un_coup_bot_carte(partie, bots):
@@ -256,10 +278,8 @@ def executer_un_coup_bot_carte(partie, bots):
     bot.historique = partie["historique"]
     bot.encheres = partie["encheres"]
     atout = partie["contrat"]["atout"]
-
     jouables = cartes_jouables(partie["mains"][j], partie["pli_en_cours"], atout, j, regles)
     carte = bot.jouer_carte(partie["mains"][j], jouables, partie["pli_en_cours"], partie["contrat"], j, regles)
-
     verifier_belote_pose(partie, j, carte)
     partie["mains"][j].remove(carte)
     partie["pli_en_cours"].append((j, carte))
@@ -281,7 +301,6 @@ def preparer_fin_pli(partie):
     pts = sum(points(c, atout) for _, c in pli)
     if len(partie["historique"]) == 32:
         pts += regles["dix_de_der"]
-
     partie["pts_cartes"][eq] += pts
     partie["plis_faits"][eq] += 1
     partie["etat"] = "pli_termine"
@@ -291,12 +310,13 @@ def preparer_fin_pli(partie):
         "carte": f"{c_gagnante[0]}{c_gagnante[1]}",
         "pts": pts
     }
-    partie["message"] = f"👉 Pli remporté par {nom_joueur(gagnant)} ({c_gagnante[0]}{c_gagnante[1]}) : +{pts} pts !"
+    partie["message"] = f"🌟 Pli remporté par {nom_joueur(gagnant)} ({c_gagnante[0]}{c_gagnante[1]}) : +{pts} pts !"
 
 
 def ramasser_pli_et_continuer(partie, session_data):
     gagnant = partie["info_pli_termine"]["gagnant"]
     partie["dernier_pli"] = list(partie["pli_en_cours"])
+    partie["plis_donne"].append((gagnant % 2, [c for _, c in partie["dernier_pli"]]))
     partie["pli_en_cours"] = []
     partie["info_pli_termine"] = None
 
@@ -314,6 +334,8 @@ def cloturer_donne(partie, session_data):
     partie["scores"][0] += marque[0]
     partie["scores"][1] += marque[1]
     partie["etat"] = "debrief"
+    dernier = partie["info_pli_termine"]["gagnant"] if partie.get("info_pli_termine") else 0
+    partie["paquet"] = paquet.ramasser_plis(partie["plis_donne"], camp_dessus=dernier % 2)
 
     sm = partie.setdefault("stats_match", {
         "donnes_jouees": 0, "contrats_pris": [0, 0], "contrats_reussis": [0, 0],
@@ -321,7 +343,6 @@ def cloturer_donne(partie, session_data):
         "erreurs_humain": 0, "total_encheres_humain": 0, "bonnes_encheres_humain": 0,
         "chance_distribution_total": 0, "bad_beats": 0, "coups_de_chance": 0
     })
-
     sm["donnes_jouees"] += 1
     camp_preneur = partie["contrat"]["joueur"] % 2
     sm["contrats_pris"][camp_preneur] += 1
@@ -343,18 +364,15 @@ def cloturer_donne(partie, session_data):
         "preneur": nom_joueur(partie["contrat"]["joueur"]),
         "contrat_nom": f"{c_str} {partie['contrat']['atout']}"
     }
-
     statut = "RÉUSSI" if reussi else "CHUTÉ"
     partie["message"] = f"Donne terminée ! Contrat {c_str} {partie['contrat']['atout']} {statut}. Points : {partie['pts_cartes'][0]} à {partie['pts_cartes'][1]}."
 
-    # Analyse du Professeur sécurisée
     try:
         partie["debrief_encheres"] = analyser_encheres_humain(partie["main_initiale_humain"], partie["encheres"], 0)
     except Exception as e:
         print(f"Avertissement analyse enchères: {e}")
         partie["debrief_encheres"] = ["Analyse des enchères indisponible pour cette donne."]
 
-    # Enregistrement automatique JSONL de la donne
     try:
         donne_rec = {
             "donneur": partie["donneur"],
@@ -371,7 +389,6 @@ def cloturer_donne(partie, session_data):
     except Exception as e:
         print(f"Avertissement sauvegarde JSONL: {e}")
 
-    # Calcul scientifique de la Chance & des Coups du sort
     try:
         mains_toutes = partie["mains_initiales_toutes"]
         f_nous = calculer_force_camp_donne([mains_toutes[0], mains_toutes[2]])
@@ -379,18 +396,13 @@ def cloturer_donne(partie, session_data):
         ratio_donne = (f_nous + 1.0) / (f_nous + f_eux + 2.0)
         sm["chance_distribution_total"] = sm.get("chance_distribution_total", 0.0) + ratio_donne
 
-        # Vérifier si l'humain a fait des erreurs lourdes sur CETTE donne
         nb_erreurs_donne = sum(1 for a in partie.get("debrief_carte", []) if a.get("label") == "Erreur")
         c_val = partie["contrat"]["valeur"]
         c_coinche = partie["contrat"].get("coinche", 0)
 
-        # 1. VRAI BAD BEAT : Contrat raisonnable chuté sans AUCUNE erreur tactique lourde
         if camp_preneur == 0 and not reussi and c_val <= 110 and c_coinche == 0 and nb_erreurs_donne == 0:
             sm["bad_beats"] = sm.get("bad_beats", 0) + 1
 
-        # 2. VRAI BRAQUAGE (Coup de chance) :
-        # - En attaque : contrat difficile (>= 120 ou coinché) réussi avec jeu faible (f_nous < 45)
-        # - En défense : contrat adverse raisonnable (<= 100) chuté alors qu'ils avaient le jeu (f_eux >= 40)
         if camp_preneur == 0 and reussi and (c_val >= 120 or c_coinche > 0) and f_nous < 45:
             sm["coups_de_chance"] = sm.get("coups_de_chance", 0) + 1
         elif camp_preneur == 1 and not reussi and c_val <= 100 and f_eux >= 40:
@@ -398,7 +410,6 @@ def cloturer_donne(partie, session_data):
     except Exception as e:
         print(f"Avertissement calcul chance: {e}")
 
-    # Vérification fin de match (1 000 points)
     obj = regles["score_objectif"]
     if max(partie["scores"]) >= obj and partie["scores"][0] != partie["scores"][1]:
         partie["match_termine"] = True
@@ -441,8 +452,6 @@ def cloturer_donne(partie, session_data):
         }
 
 
-# --- ROUTES HTTP FLASK (BRANCHÉES SUR LA SESSION COURANTE) ---
-
 @app.route("/")
 def index():
     partie, bots, data = obtenir_session()
@@ -469,7 +478,6 @@ def get_etat():
             "carte_gagnante": f"{c_gag[0]}{c_gag[1]}"
         })
 
-    # Atout pris en compte pour le tri seulement PENDANT le jeu, ordre neutre pendant les annonces
     atout_tri = partie["contrat"]["atout"] if (partie["contrat"] and partie["etat"] != "annonces") else None
     return jsonify({
         "etat": partie["etat"],
@@ -519,16 +527,13 @@ def action_enchere():
     partie, bots, data = obtenir_session()
     if partie["etat"] != "annonces" or partie["tour"] != 0:
         return jsonify({"erreur": "Ce n'est pas votre tour"}), 400
-
     payload = request.json or {}
     choix = payload.get("choix")
-
     if isinstance(choix, list):
         val = int(choix[0])
         if partie["contrat"] and val <= partie["contrat"]["valeur"]:
             return jsonify({"erreur": "Enchère insuffisante"}), 400
         choix = (val, choix[1])
-
     traiter_decision_enchere(partie, bots, 0, choix)
     return jsonify({"succes": True})
 
@@ -538,18 +543,15 @@ def route_jouer_carte():
     partie, bots, data = obtenir_session()
     if partie["etat"] != "jeu" or partie["tour"] != 0:
         return jsonify({"erreur": "Ce n'est pas votre tour"}), 400
-
     payload = request.json or {}
     carte = (payload["rang"], payload["couleur"])
     regles = REGLES_STANDARD
     atout = partie["contrat"]["atout"]
     jouables = cartes_jouables(partie["mains"][0], partie["pli_en_cours"], atout, 0, regles)
-
     if carte not in jouables:
         return jsonify({"erreur": "Carte interdite"}), 400
 
     verifier_belote_pose(partie, 0, carte)
-
     analyse = evaluer_decision_carte(
         partie["mains"][0], jouables, partie["pli_en_cours"], partie["contrat"],
         0, carte, partie["historique"], partie["encheres"], regles
@@ -563,9 +565,9 @@ def route_jouer_carte():
             if lbl == "Meilleur coup":
                 sm["coups_parfaits_humain"] = sm.get("coups_parfaits_humain", 0.0) + 1.0
             elif lbl == "Solide":
-                sm["coups_parfaits_humain"] = sm.get("coups_parfaits_humain", 0.0) + 0.8
+                sm["coups_parfaits_humain"] = sm.get("coups_parfaits_humain", 0.8) + 0.8
             elif lbl == "Imprécision":
-                sm["coups_parfaits_humain"] = sm.get("coups_parfaits_humain", 0.0) + 0.4
+                sm["coups_parfaits_humain"] = sm.get("coups_parfaits_humain", 0.4) + 0.4
             elif lbl == "Erreur":
                 sm["erreurs_humain"] = sm.get("erreurs_humain", 0) + 1
 
@@ -587,11 +589,21 @@ def route_changer_niveau_ia():
     niveau = (request.json or {}).get("niveau", "coop")
     if niveau not in ("normal", "expert"):
         return jsonify({"erreur": f"Niveau inconnu : {niveau}"}), 400
-
     data["bots"] = obtenir_bots(niveau)
     data["niveau"] = niveau
-    print(f"Session {session.get('sid', '')[:8]} -> Niveau : {niveau}")
     return jsonify({"succes": True, "niveau": niveau})
+
+
+@app.route("/api/couper", methods=["POST"])
+def route_couper():
+    partie, bots, data = obtenir_session()
+    if partie.get("etat") != "coupe":
+        return jsonify({"erreur": "Pas en phase de coupe"}), 400
+    corps = request.get_json(silent=True) or {}
+    choix = corps.get("choix", "milieu")
+    partie["paquet"] = paquet.coupe_humaine(partie["paquet"], choix, random.Random())
+    finaliser_distribution_apres_coupe(partie)
+    return jsonify({"succes": True})
 
 
 @app.route("/api/nouvelle_donne", methods=["POST"])
@@ -599,7 +611,7 @@ def route_nouvelle_donne():
     partie, bots, data = obtenir_session()
     partie["donneur"] = (partie["donneur"] + 1) % 4
     demarrer_nouvelle_donne(partie)
-    return jsonify({"succes": True})
+    return jsonify({"succes": True, "etat": partie["etat"]})
 
 
 @app.route("/api/export_donne")
@@ -607,13 +619,11 @@ def route_export_donne():
     partie, bots, data = obtenir_session()
     if not partie["mains_initiales_toutes"][0]:
         return jsonify({"texte": "Aucune donne enregistrée."})
-
     lignes = [
         "=" * 60,
         "RAPPORT D'ANALYSE DE DONNE — COINCHE IA",
         "=" * 60
     ]
-
     noms_niveaux = {
         "normal": "IA Rapide (Réseau V2)",
         "expert": "Grand Maître (v6 Hybride V2 40s)",
@@ -628,18 +638,15 @@ def route_export_donne():
         lignes.append(f"Contrat final : {nom_c} {c['atout']} par {nom_joueur(c['joueur'])} — {coinche_str}")
     else:
         lignes.append("Contrat final : Aucun (passe générale)")
-
     lignes.append("\n--- DÉROULEMENT DES ENCHÈRES ---")
     for j, d in partie["encheres"]:
         nom_j = nom_joueur(j)
         action = f"{d[0]} {d[1]}" if isinstance(d, tuple) else str(d).upper()
         lignes.append(f"  {nom_j:18} : {action}")
-
     lignes.append("\n--- MAINS DE DÉPART (cartes triées) ---")
     for p in range(4):
         cartes_str = " ".join(f"{r}{c}" for r, c in trier_main(partie["mains_initiales_toutes"][p]))
         lignes.append(f"  {nom_joueur(p):18} : {cartes_str}")
-
     if partie["historique"]:
         lignes.append("\n--- DÉROULEMENT DU JEU DE LA CARTE ---")
         atout = partie["contrat"]["atout"] if partie["contrat"] else "♠"
@@ -656,7 +663,6 @@ def route_export_donne():
                 if num_pli == 8: pts += regles["dix_de_der"]
                 lignes.append(f"  Pli {num_pli} : {detail_pli}")
                 lignes.append(f"         ==> Remporté par {nom_joueur(gagnant)} avec {c_gagnante[0]}{c_gagnante[1]} (+{pts} pts)")
-
     b = partie["bilan_donne"]
     if b:
         lignes.append("\n--- BILAN DE LA DONNE ---")
@@ -667,12 +673,10 @@ def route_export_donne():
         lignes.append(f"  Résultat      : {b['contrat_nom']} est {statut}")
         lignes.append(f"  Marque donne  : Vous +{b['marque_nous']} | Eux +{b['marque_eux']}")
         lignes.append(f"  SCORE TOTAL   : Vous {partie['scores'][0]} — {partie['scores'][1]} Eux")
-
     if partie["debrief_encheres"]:
         lignes.append("\n--- ANALYSE PROFESSEUR : ENCHÈRES ---")
         for txt in partie["debrief_encheres"]:
             lignes.append(f"  {txt}")
-
     if partie["debrief_carte"]:
         lignes.append("\n--- ANALYSE PROFESSEUR : JEU DE LA CARTE ---")
         for item in partie["debrief_carte"]:
@@ -682,7 +686,6 @@ def route_export_donne():
             if not item.get("est_force") and item.get("options"):
                 opts_str = " | ".join(f"{o['carte']}: {o.get('proba', o.get('note', ''))}" for o in item['options'])
                 lignes.append(f"    Options évaluées : {opts_str}")
-
     lignes.append("\n" + "=" * 60)
     return jsonify({"texte": "\n".join(lignes)})
 
@@ -697,6 +700,7 @@ def route_rejouer_match():
     partie, bots, data = obtenir_session()
     partie["scores"] = [0, 0]
     partie["donneur"] = 0
+    partie["paquet"] = None
     partie["match_termine"] = False
     partie["bilan_match"] = None
     partie["stats_match"] = {
