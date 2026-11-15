@@ -32,12 +32,14 @@ def diagnostiquer_erreur_carte(c_jouee, top_c, jouables, main, pli, contrat, jou
     pts_jouee = points(c_jouee, atout)
     pts_top = points(top_c, atout)
 
-    # 1. CAS DU MEILLEUR COUP OU COUP ÉQUIVALENT (ZÉRO ERREUR !)
-    if c_jouee == top_c:
+    # 1. CAS DU MEILLEUR COUP, COUP ÉQUIVALENT OU DANS LA MARGE D'EXCELLENCE (<= 8%)
+    if c_jouee == top_c or sont_equiv or ecart_proba <= 0.08:
         if len(pli) == 0 and est_preneur and c_jouee[0] == "V" and c_jouee[1] == atout:
             return "Entame d'école : en tant que preneur, purger au Valet maître désarme immédiatement la défense."
         if len(pli) == 0 and est_partenaire_preneur and c_jouee[1] == atout:
             return "Excellent jeu d'équipe : jouer atout vers votre preneur lui donne la main et purge les adversaires."
+        if sont_equiv:
+            return f"Coup équivalent. Vous possédez les cartes maîtresses consécutives ({c_jouee[0]} et {top_c[0]} de {c_jouee[1]}). Jouer l'une ou l'autre est parfaitement équivalent en levée."
         return "Choix optimal. Votre décision maximise les chances de réussite du contrat."
 
     if sont_equiv:
@@ -175,16 +177,16 @@ def evaluer_decision_carte(main, jouables, pli, contrat, joueur, carte_jouee, hi
             "top": is_top
         })
 
-    # Diagnostic tactique
+    # Diagnostic tactique (reçoit la vraie marge ecart_proba)
     explication = diagnostiquer_erreur_carte(
         carte_jouee, top_carte, jouables, main, pli, contrat, joueur,
         historique, sont_equiv, ecart_proba, ecart_pts
     )
 
-    # Étiquettes pédagogiques
-    if carte_jouee == top_carte or sont_equiv or ecart_proba <= 0.05:
+    # Étiquettes pédagogiques avec tolérance réaliste de simulation (8 % = 2 donnes sur 25)
+    if carte_jouee == top_carte or sont_equiv or ecart_proba <= 0.08:
         apprec = ("Meilleur coup", "green", "🌟 Excellent choix")
-    elif ecart_proba <= 0.15:
+    elif ecart_proba <= 0.16:
         apprec = ("Solide", "blue", "👍 Coup solide")
     elif ecart_proba <= 0.25:
         apprec = ("Imprécision", "orange", f"⚠️ Préférable : {top_carte[0]}{top_carte[1]}")
