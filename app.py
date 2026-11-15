@@ -41,6 +41,12 @@ def creer_partie_vierge():
         "main_initiale_humain": [],
         "mains_initiales_toutes": [[], [], [], []],
         "contrat": None,
+        "reponse_coinche": False,
+        "feuille_marque": [],
+        "reponse_coinche": False,
+        "passes_surcoinche": 0,
+
+        "passes_surcoinche": 0,
         "encheres": [],
         "tour": 1,
         "pli_en_cours": [],
@@ -91,7 +97,7 @@ def obtenir_session():
     if sid not in SESSIONS_UTILISATEURS:
         p = creer_partie_vierge()
         b = obtenir_bots("expert")
-        SESSIONS_UTILISATEURS[sid] = {"partie": p, "bots": b, "niveau": "expert", "ts": maintenant}
+        SESSIONS_UTILISATEURS[sid] = {"partie": p, "bots": b, "niveau": "expert", "bareme": "contrat", "ts": maintenant}
     else:
         SESSIONS_UTILISATEURS[sid]["ts"] = maintenant
 
@@ -185,29 +191,40 @@ def executer_un_coup_bot_enchere(partie, bots):
     dec = bot.annoncer(partie["mains"][j], j, partie["contrat"], regles)
     traiter_decision_enchere(partie, bots, j, dec)
 
-
 def traiter_decision_enchere(partie, bots, joueur, dec):
     regles = REGLES_STANDARD
     if isinstance(dec, tuple) and not annonce_valide(dec, partie["contrat"], regles):
         print(f"⚠️ ENCHÈRE ILLÉGALE refusée : {nom_joueur(joueur)} proposait {dec} sur {partie['contrat']}", flush=True)
         dec = "passe"
 
+    # 1. COINCHE INITIALE : ouvre la phase de réponse pour le camp attaqué
     if dec == "coinche" and partie["contrat"] and partie["contrat"]["joueur"] % 2 != joueur % 2:
         partie["contrat"]["coinche"] = 1
         partie["encheres"].append((joueur, "coinche"))
         partie["bulles"][joueur] = "⚡ COINCHE !"
-        partie["message"] = f"{nom_joueur(joueur)} COINCHE le contrat !"
-        terminer_encheres(partie)
+        partie["reponse_coinche"] = True
+        partie["passes_surcoinche"] = 0
+
+        # Premier joueur du camp attaqué à parler (dans le sens horaire après le coincheur)
+        premier_repondeur = (joueur + 1) % 4
+        if premier_repondeur % 2 != partie["contrat"]["joueur"] % 2:
+            premier_repondeur = (joueur + 2) % 4
+
+        partie["tour"] = premier_repondeur
+        partie["message"] = f"⚡ {nom_joueur(joueur)} a coinché ! À {nom_joueur(premier_repondeur)} de décider (Surcoinche ou Passe)."
         return
 
+    # 2. SURCOINCHE : contrat x3, fin immédiate des enchères
     if dec == "surcoinche" and partie["contrat"] and partie["contrat"].get("coinche", 0) == 1 and partie["contrat"]["joueur"] % 2 == joueur % 2:
         partie["contrat"]["coinche"] = 2
         partie["encheres"].append((joueur, "surcoinche"))
         partie["bulles"][joueur] = "💣 SURCOINCHE !"
-        partie["message"] = f"{nom_joueur(joueur)} SURCOINCHE le contrat !"
+        partie["message"] = f"{nom_joueur(joueur)} SURCOINCHE le contrat (x3) !"
+        partie["reponse_coinche"] = False
         terminer_encheres(partie)
         return
 
+    # 3. ANNONCE NORMALE DE POINTS
     if isinstance(dec, tuple):
         val, coul = dec
         capot = regles["capot_autorise"] and val == regles["valeur_capot"]
@@ -220,11 +237,30 @@ def traiter_decision_enchere(partie, bots, joueur, dec):
         partie["encheres"].append((joueur, dec))
         partie["bulles"][joueur] = f"{'CAPOT' if capot else val} {coul}"
         partie["message"] = f"{nom_joueur(joueur)} annonce {'CAPOT' if capot else val} {coul}."
-    else:
-        partie["encheres"].append((joueur, "passe"))
-        partie["bulles"][joueur] = "Passe"
-        partie["message"] = f"{nom_joueur(joueur)} passe."
+        partie["tour"] = (joueur + 1) % 4
+        return
 
+    # 4. PASSE
+    partie["encheres"].append((joueur, "passe"))
+    partie["bulles"][joueur] = "Passe"
+    partie["message"] = f"{nom_joueur(joueur)} passe."
+
+    # Si on était en train de répondre à une coinche :
+    if partie.get("reponse_coinche"):
+        partie["passes_surcoinche"] = partie.get("passes_surcoinche", 0) + 1
+        if partie["passes_surcoinche"] >= 2:
+            # Les 2 joueurs du camp attaqué ont passé -> le jeu commence à x2
+            partie["reponse_coinche"] = False
+            terminer_encheres(partie)
+            return
+        else:
+            # Au tour du partenaire du camp attaqué
+            partenaire = (joueur + 2) % 4
+            partie["tour"] = partenaire
+            partie["message"] = f"{nom_joueur(joueur)} passe. À {nom_joueur(partenaire)} de décider (Surcoinche ou Passe)."
+            return
+
+    # Passes normales hors coinche
     passes = 0
     for _, d in reversed(partie["encheres"]):
         if d == "passe": passes += 1
@@ -333,12 +369,45 @@ def ramasser_pli_et_continuer(partie, session_data):
         partie["tour"] = gagnant
         partie["message"] = f"À {nom_joueur(gagnant)} d'entamer le pli suivant."
 
-
 def cloturer_donne(partie, session_data):
-    regles = REGLES_STANDARD
+    bareme = session_data.get("bareme", "contrat")
+    regles = dict(REGLES_STANDARD, mode_score=bareme)
     marque, reussi = decompte(partie["contrat"], partie["pts_cartes"], partie["plis_faits"], partie["belote_equipe"], regles)
     partie["scores"][0] += marque[0]
     partie["scores"][1] += marque[1]
+     # Enregistrement dans la feuille de marque officielle
+    c_contrat = partie["contrat"]
+    camp_preneur = c_contrat["joueur"] % 2
+    capot_annonce = bool(c_contrat.get("capot"))
+    capot_realise_nous = (partie["plis_faits"][0] == 8)
+    capot_realise_eux  = (partie["plis_faits"][1] == 8)
+    capot_non_annonce_nous = (capot_realise_nous and not (camp_preneur == 0 and capot_annonce))
+    capot_non_annonce_eux  = (capot_realise_eux and not (camp_preneur == 1 and capot_annonce))
+
+    etoile_capot = None
+    if capot_non_annonce_nous:
+        etoile_capot = 0  # Nous
+    elif capot_non_annonce_eux:
+        etoile_capot = 1  # Eux
+
+    c_symbole = "CAPOT" if capot_annonce else c_contrat["valeur"]
+    c_nom_complet = f"{c_symbole} {c_contrat['atout']}"
+
+    partie.setdefault("feuille_marque", []).append({
+        "donne": len(partie["feuille_marque"]) + 1,
+        "donneur": nom_joueur(partie["donneur"]).replace(" (Sud)", "").replace(" (Nord)", ""),
+        "contrat": c_nom_complet,
+        "preneur": nom_joueur(c_contrat["joueur"]).replace(" (Sud)", "").replace(" (Nord)", ""),
+        "coinche": c_contrat.get("coinche", 0),
+        "reussi": reussi,
+        "points_faits": f"{partie['pts_cartes'][0]} - {partie['pts_cartes'][1]}",
+        "marque_nous": marque[0],
+        "marque_eux": marque[1],
+        "total_nous": partie["scores"][0],
+        "total_eux": partie["scores"][1],
+        "etoile_capot": etoile_capot  # 0 si Nous, 1 si Eux, None sinon
+    })   
+
     partie["etat"] = "debrief"
     dernier = partie["info_pli_termine"]["gagnant"] if partie.get("info_pli_termine") else 0
     partie["paquet"] = paquet.ramasser_plis(partie["plis_donne"], camp_dessus=dernier % 2)
@@ -374,7 +443,11 @@ def cloturer_donne(partie, session_data):
     partie["message"] = f"Donne terminée ! Contrat {c_str} {partie['contrat']['atout']} {statut}. Points : {partie['pts_cartes'][0]} à {partie['pts_cartes'][1]}."
 
     try:
-        partie["debrief_encheres"] = analyser_encheres_humain(partie["main_initiale_humain"], partie["encheres"], 0)
+        comms, notes_ench = analyser_encheres_humain(partie["main_initiale_humain"], partie["encheres"], 0)
+        partie["debrief_encheres"] = comms
+        for n in notes_ench:
+            sm["total_encheres_humain"] = sm.get("total_encheres_humain", 0) + 1
+            sm["bonnes_encheres_humain"] = sm.get("bonnes_encheres_humain", 0.0) + n
     except Exception as e:
         print(f"Avertissement analyse enchères: {e}")
         partie["debrief_encheres"] = ["Analyse des enchères indisponible pour cette donne."]
@@ -421,7 +494,10 @@ def cloturer_donne(partie, session_data):
         partie["match_termine"] = True
         victoire = (partie["scores"][0] > partie["scores"][1])
         prec_carte = round(100.0 * sm.get("coups_parfaits_humain", 0.0) / max(1, sm.get("total_coups_humain", 0)), 1)
-        prec_globale = prec_carte
+        tot_ench = sm.get("total_encheres_humain", 0)
+        prec_ench = round(100.0 * sm.get("bonnes_encheres_humain", 0.0) / max(1, tot_ench), 1) if tot_ench > 0 else 100.0
+        prec_globale = round((prec_carte * 0.6) + (prec_ench * 0.4), 1)
+
 
         if prec_globale >= 85:
             mention = "🌟 Grand Maître"
@@ -446,7 +522,7 @@ def cloturer_donne(partie, session_data):
             "score_eux": partie["scores"][1],
             "donnes": sm["donnes_jouees"],
             "precision_carte": f"{prec_carte} %",
-            "precision_encheres": "-- (en calibration)",
+            "precision_encheres": f"{prec_ench} %",
             "mention": mention,
             "erreurs": sm["erreurs_humain"],
             "contrats_nous": f"{sm['contrats_reussis'][0]}/{sm['contrats_pris'][0]} réussis",
@@ -513,6 +589,8 @@ def get_etat():
         "debrief_encheres": partie["debrief_encheres"],
         "match_termine": partie["match_termine"],
         "bilan_match": partie["bilan_match"],
+        "feuille_marque": partie.get("feuille_marque", []),
+        "bareme": data.get("bareme", "contrat")
     })
 
 
@@ -587,6 +665,15 @@ def route_jouer_carte():
     else:
         partie["tour"] = 1
     return jsonify({"succes": True})
+
+@app.route("/api/changer_bareme", methods=["POST"])
+def route_changer_bareme():
+    partie, bots, data = obtenir_session()
+    bareme = (request.json or {}).get("bareme", "contrat")
+    if bareme not in ("contrat", "ffb"):
+        return jsonify({"erreur": f"Barème inconnu : {bareme}"}), 400
+    data["bareme"] = bareme
+    return jsonify({"succes": True, "bareme": bareme})
 
 
 @app.route("/api/changer_niveau_ia", methods=["POST"])
@@ -708,6 +795,7 @@ def route_rejouer_match():
     partie["donneur"] = 0
     partie["paquet"] = None
     partie["match_termine"] = False
+    partie["feuille_marque"] = []
     partie["bilan_match"] = None
     partie["stats_match"] = {
         "donnes_jouees": 0,

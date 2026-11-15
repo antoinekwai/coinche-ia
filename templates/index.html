@@ -321,12 +321,12 @@
                 Affrontez nos bots entraînés par intelligence artificielle et analysez chacune de vos décisions grâce au <b>Mode Professeur</b> !
             </p>
             
-            <div style="text-align:left; background:#111418; padding:12px; border-radius:8px; margin-bottom:18px; border:1px solid #333;">
+            <div style="text-align:left; background:#111418; padding:12px; border-radius:8px; margin-bottom:12px; border:1px solid #333;">
                 <label style="font-size:12px; font-weight:bold; color:#74c69d; display:block; margin-bottom:6px;">Niveau des partenaires et adversaires :</label>
-                <div style="margin-bottom:10px;">
+                <div style="margin-bottom:8px;">
                     <label style="font-size:13px; cursor:pointer; display:flex; align-items:center; gap:8px;">
                         <input type="radio" name="radio-level" value="expert" checked>
-                        <span>🧠 <b>Grand Maître (v5 Hybride)</b> — Réflexion approfondie & champion officiel</span>
+                        <span>🧠 <b>Grand Maître (v6.1 Hybride)</b> — Réflexion approfondie & champion officiel</span>
                     </label>
                 </div>
                 <div>
@@ -335,18 +335,35 @@
                         <span>⚡ <b>IA Rapide</b> — Jeu instantané (réseau neuronal pur)</span>
                     </label>
                 </div>
+            </div>
 
+            <div style="text-align:left; background:#111418; padding:12px; border-radius:8px; margin-bottom:18px; border:1px solid #333;">
+                <label style="font-size:12px; font-weight:bold; color:#74c69d; display:block; margin-bottom:6px;">Barème de décompte des points :</label>
+                <div style="margin-bottom:8px;">
+                    <label style="font-size:13px; cursor:pointer; display:flex; align-items:center; gap:8px;">
+                        <input type="radio" name="radio-bareme" value="contrat" checked>
+                        <span>🎯 <b>Standard (Contrat sec)</b> — On marque ou chute la valeur du contrat</span>
+                    </label>
+                </div>
+                <div>
+                    <label style="font-size:13px; cursor:pointer; display:flex; align-items:center; gap:8px;">
+                        <input type="radio" name="radio-bareme" value="ffb">
+                        <span>🏛️ <b>Officiel FFB</b> — Points faits + Contrat (chute = 160 + contrat)</span>
+                    </label>
+                </div>
             </div>
 
             <button onclick="validerAccueilEtLancer()" style="width:100%; padding:14px; font-size:16px; background:#ffd166; color:#111; font-weight:bold; border:none; border-radius:8px; cursor:pointer;">
                 ▶ Commencer la partie
             </button>
+
         </div>
     </div>
 
     <!-- POP-UP FIN DE DONNE -->
     <div id="modal-donne" class="modal-overlay">
-        <div style="background:#1a1e24; border:2px solid #ffd166; border-radius:14px; padding:22px; max-width:440px; width:100%; text-align:center; box-shadow:0 8px 25px rgba(0,0,0,0.8);">
+        <div style="background:#1a1e24; border:2px solid #ffd166; border-radius:14px; padding:22px; max-width:620px; width:95%; text-align:center; box-shadow:0 8px 25px rgba(0,0,0,0.8);">
+
             <div id="donne-result-icon" style="font-size:36px; margin-bottom:6px;">🎉</div>
             <h2 id="donne-result-title" style="color:#ffd166; font-size:20px; margin-bottom:12px;">Donne Terminée</h2>
             
@@ -362,6 +379,41 @@
             </div>
         </div>
     </div>
+
+    <!-- MODAL FEUILLE DE MARQUE TRADITIONNELLE -->
+    <div id="modal-scoreboard" class="modal-overlay" onclick="fermerFeuilleMarque()">
+        <div class="zoom-box" style="max-width: 580px; width: 95%; background: #151920; border: 2px solid #74c69d; padding: 20px;" onclick="event.stopPropagation()">
+            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; border-bottom:1px solid #333; padding-bottom:8px; margin-bottom:12px;">
+                <div style="font-size:18px; font-weight:bold; color:#ffd166;">📋 Feuille de Marque Officielle</div>
+                <button onclick="fermerFeuilleMarque()" style="background:transparent; border:none; color:#adb5bd; font-size:18px; cursor:pointer;">✕</button>
+            </div>
+
+            <div style="max-height: 380px; overflow-y: auto; width: 100%;">
+                <table style="width: 100%; font-size: 12px; border-collapse: collapse; text-align: center;">
+                    <thead>
+                        <tr style="background: #1f2530; color: #74c69d; border-bottom: 2px solid #74c69d;">
+                            <th style="padding: 6px;">#</th>
+                            <th style="padding: 6px;">Donneur</th>
+                            <th style="padding: 6px;">Contrat</th>
+                            <th style="padding: 6px; color: #ffd166; border-left: 1px solid #333;">NOUS (pts)</th>
+                            <th style="padding: 6px; color: #ffd166;">Total</th>
+                            <th style="padding: 6px; color: #e63946; border-left: 1px solid #333;">EUX (pts)</th>
+                            <th style="padding: 6px; color: #e63946;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scoreboard-body">
+                        <!-- Rempli dynamiquement -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="margin-top: 14px; display: flex; justify-content: space-between; align-items: center; width: 100%; font-size: 11px; color: #adb5bd;">
+                <span>★ = Capot réalisé sans annonce (+250)</span>
+                <button onclick="fermerFeuilleMarque()" style="padding:6px 18px; background:#495057; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Fermer</button>
+            </div>
+        </div>
+    </div>
+
 
     <!-- TAPIS VERT -->
     <div id="table-container">
@@ -401,7 +453,9 @@
             <div class="score-bar">
                 <span>Score : <span id="score-nous">0</span> — <span id="score-eux">0</span></span>
                 <span style="font-size:11px; color:#adb5bd;">(Obj: <span id="score-obj">1000</span>)</span>
+                <button onclick="ouvrirFeuilleMarque()" style="background:#2b303c; border:1px solid #74c69d; color:#74c69d; padding:2px 8px; font-size:11px; border-radius:10px; cursor:pointer; font-weight:bold; margin-left:4px;">📋 Feuille</button>
             </div>
+
             
             <div id="active-contract-badge" class="contract-badge"></div>
 
@@ -471,7 +525,8 @@
                     <option value="♦">♦ Carreau</option><option value="♣">♣ Trèfle</option>
                 </select>
                 <button class="btn-primary" onclick="validerEnchere()">OK</button>
-                <button class="btn-danger" id="btn-coinche" onclick="actionEnchere('coinche')">Coinche</button>
+                <button class="btn-danger" id="btn-coinche" onclick="actionCoincheOuSurcoinche()">Coinche</button>
+
             </div>
 
             <div class="player-header">
@@ -585,6 +640,11 @@
                 osc.stop(ctx.currentTime + 0.06);
             } catch(e) {}
         }
+        
+        function ouvrirBilanMatchDepuisDonne() {
+            document.getElementById('modal-donne').style.display = 'none';
+            document.getElementById('modal-match').style.display = 'flex';
+        }
 
         // Son de froissement / volée de distribution
         function playDealSwooshSound() {
@@ -607,6 +667,44 @@
                 osc.stop(ctx.currentTime + 0.12);
             } catch(e) {}
         }
+
+        function ouvrirFeuilleMarque() {
+            const modal = document.getElementById('modal-scoreboard');
+            const tbody = document.getElementById('scoreboard-body');
+            const liste = etatJeu.feuille_marque || [];
+
+            if (liste.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="padding: 20px; color: #adb5bd;">Aucune donne terminée pour l'instant.</td></tr>`;
+            } else {
+                tbody.innerHTML = liste.map(row => {
+                    const coincheBadge = row.coinche === 2 ? ' <span style="color:#e63946; font-weight:bold;">x3</span>' : (row.coinche === 1 ? ' <span style="color:#e63946; font-weight:bold;">x2</span>' : '');
+                    const statutIcon = row.reussi ? '✅' : '❌';
+
+                    const etoileNous = (row.etoile_capot === 0) ? '<span style="color:#ffd166; font-weight:bold;" title="Capot non annoncé !">★</span> ' : '';
+                    const etoileEux  = (row.etoile_capot === 1) ? '<span style="color:#ffd166; font-weight:bold;" title="Capot non annoncé !">★</span> ' : '';
+
+                    const bgRow = (row.donne % 2 === 0) ? 'background: rgba(255,255,255,0.02);' : '';
+
+                    return `
+                        <tr style="border-bottom: 1px solid #28303d; ${bgRow}">
+                            <td style="padding: 6px; color: #888;">${row.donne}</td>
+                            <td style="padding: 6px;">${row.donneur}</td>
+                            <td style="padding: 6px; font-weight: bold;">${row.contrat} (${row.preneur})${coincheBadge} ${statutIcon}</td>
+                            <td style="padding: 6px; font-weight: bold; color: #74c69d; border-left: 1px solid #333;">${etoileNous}+${row.marque_nous}</td>
+                            <td style="padding: 6px; color: #ffd166; font-weight: bold;">${row.total_nous}</td>
+                            <td style="padding: 6px; font-weight: bold; color: #e76f51; border-left: 1px solid #333;">${etoileEux}+${row.marque_eux}</td>
+                            <td style="padding: 6px; color: #ffd166; font-weight: bold;">${row.total_eux}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+            modal.style.display = 'flex';
+        }
+
+        function fermerFeuilleMarque() {
+            document.getElementById('modal-scoreboard').style.display = 'none';
+        }
+
 
         // Synthèse vocale française pour Coinche, Belote, Rebelote
         function speakVoice(text) {
@@ -844,47 +942,83 @@
                 afficherPliSurTapis(etatJeu.pli_en_cours, etatJeu.info_pli_termine, false);
             }
 
-            // Contrôles enchères avec Surcoinche intelligente
+            // Contrôles enchères avec Surcoinche interactive & boutons fixes
             const bidControls = document.getElementById('bid-controls');
             if (etatJeu.etat === 'annonces' && etatJeu.tour === 0) {
                 bidControls.style.display = 'flex';
+                const btnPasse = bidControls.querySelector('.btn-secondary');
                 const btnC = document.getElementById('btn-coinche');
-                if (etatJeu.contrat && etatJeu.contrat.coinche === 1 && (etatJeu.contrat.joueur % 2 === 0)) {
-                    // Contrat de notre équipe coinché par l'adversaire -> bouton Surcoinche !
+                const selectVal = document.getElementById('bid-valeur');
+                const selectCoul = document.getElementById('bid-couleur');
+                const btnOk = bidControls.querySelector('.btn-primary');
+
+                const estCoinche = (etatJeu.contrat && etatJeu.contrat.coinche === 1);
+                const campPreneur = etatJeu.contrat ? (etatJeu.contrat.joueur % 2) : null;
+
+                // Neutraliser toute animation mobile parasite
+                btnC.style.animation = 'none';
+                btnC.style.transform = 'none';
+
+                if (estCoinche && campPreneur === 0) {
+                    // CAS 1 : SURCOINCHE — Interface épurée à 2 gros boutons fixes
+                    if (btnPasse) {
+                        btnPasse.innerText = '✋ Passe (x2)';
+                        btnPasse.style.padding = '8px 16px';
+                    }
+                    if (selectVal) selectVal.style.display = 'none';
+                    if (selectCoul) selectCoul.style.display = 'none';
+                    if (btnOk) btnOk.style.display = 'none';
+
                     btnC.style.display = 'inline-block';
                     btnC.innerText = '💣 SURCOINCHE ! (x3)';
                     btnC.disabled = false;
-                } else if (etatJeu.contrat && etatJeu.contrat.coinche === 0 && (etatJeu.contrat.joueur % 2 !== 0)) {
-                    // Contrat adverse non coinché -> bouton Coinche normal
-                    btnC.style.display = 'inline-block';
-                    btnC.innerText = '🔥 Coinche';
-                    btnC.disabled = false;
+                    btnC.style.background = '#e63946';
+                    btnC.style.padding = '8px 20px';
+                    btnC.style.fontSize = '14px';
+                    btnC.style.fontWeight = 'bold';
+                    btnC.style.boxShadow = '0 0 15px rgba(230, 57, 70, 0.7)';
                 } else {
-                    btnC.style.display = 'none';
-                }
-                let minVal = 80;
-                let contratExiste = (etatJeu.contrat && typeof etatJeu.contrat.valeur === 'number');
-                if (contratExiste) {
-                    minVal = etatJeu.contrat.valeur + 10;
-                }
-
-                const selectVal = document.getElementById('bid-valeur');
-                if (selectVal.getAttribute('data-min') !== String(minVal)) {
-                    selectVal.setAttribute('data-min', String(minVal));
-                    selectVal.innerHTML = '';
-                    for (let v = Math.max(minVal, 80); v <= 160; v += 10) {
-                        selectVal.innerHTML += `<option value="${v}">${v}</option>`;
+                    // CAS 2 : ENCHÈRES NORMALES
+                    if (btnPasse) {
+                        btnPasse.innerText = 'Passe';
+                        btnPasse.style.padding = '7px 12px';
                     }
-                    if (minVal <= 250) {
-                        selectVal.innerHTML += `<option value="250">Capot (250)</option>`;
+                    if (selectVal) selectVal.style.display = 'inline-block';
+                    if (selectCoul) selectCoul.style.display = 'inline-block';
+                    if (btnOk) btnOk.style.display = 'inline-block';
+
+                    btnC.style.boxShadow = 'none';
+                    btnC.style.fontSize = '13px';
+                    btnC.style.padding = '7px 12px';
+
+                    let contratExiste = (etatJeu.contrat && typeof etatJeu.contrat.valeur === 'number');
+
+                    if (contratExiste && campPreneur !== 0 && !estCoinche) {
+                        // Contrat adverse non coinché -> bouton Coinche normal disponible
+                        btnC.style.display = 'inline-block';
+                        btnC.innerText = '🔥 Coinche';
+                        btnC.disabled = false;
+                        btnC.style.background = '#e63946';
+                    } else {
+                        btnC.style.display = 'none';
+                    }
+
+                    let minVal = contratExiste ? (etatJeu.contrat.valeur + 10) : 80;
+                    if (selectVal && selectVal.getAttribute('data-min') !== String(minVal)) {
+                        selectVal.setAttribute('data-min', String(minVal));
+                        selectVal.innerHTML = '';
+                        for (let v = Math.max(minVal, 80); v <= 160; v += 10) {
+                            selectVal.innerHTML += `<option value="${v}">${v}</option>`;
+                        }
+                        if (minVal <= 250) {
+                            selectVal.innerHTML += `<option value="250">Capot (250)</option>`;
+                        }
                     }
                 }
-
-                const btnCoinche = document.getElementById('btn-coinche');
-                btnCoinche.disabled = !Boolean(contratExiste && (etatJeu.contrat.joueur % 2 !== 0) && !etatJeu.contrat.coinche);
             } else {
                 bidControls.style.display = 'none';
             }
+
 
             // Affichage du panneau de coupe
             const cutControls = document.getElementById('cut-controls');
@@ -915,8 +1049,24 @@
                     document.getElementById('box-score-summary').innerHTML = bilanHtml;
 
                     // POP-UP AUTOMATIQUE
-                    if (!modalDonneAffichee && !etatJeu.match_termine) {
+                    if (!modalDonneAffichee) {
                         modalDonneAffichee = true;
+                        // Si le match est terminé, le bouton propose de voir le bilan
+                        const btnSuivant = document.querySelector('#modal-donne button[onclick*="nouvelleDonneDepuisModal"]');
+                        if (btnSuivant) {
+                            if (etatJeu.match_termine) {
+                                btnSuivant.innerText = "🏆 Voir le Bilan du Match ➔";
+                                btnSuivant.setAttribute('onclick', 'ouvrirBilanMatchDepuisDonne()');
+                                btnSuivant.style.background = '#ffd166';
+                                btnSuivant.style.color = '#111';
+                            } else {
+                                btnSuivant.innerText = "Donne Suivante ➔";
+                                btnSuivant.setAttribute('onclick', 'nouvelleDonneDepuisModal()');
+                                btnSuivant.style.background = '#2ec4b6';
+                                btnSuivant.style.color = '#fff';
+                            }
+                        }
+
                         const preneurEstNous = (etatJeu.contrat && etatJeu.contrat.joueur % 2 === 0);
                         const victoireNous = preneurEstNous ? b.reussi : !b.reussi;
                         
@@ -947,8 +1097,69 @@
                         document.getElementById('donne-result-icon').innerText = iconResult;
                         document.getElementById('donne-result-title').innerText = titreResult;
                         document.getElementById('donne-result-title').style.color = couleurResult;
-                        document.getElementById('modal-donne-summary').innerHTML = bilanHtml;
+
+                        // GÉNÉRATION DE LA FEUILLE DE MARQUE DANS LE POP-UP
+                        const liste = etatJeu.feuille_marque || [];
+                        const derRow = liste.length > 0 ? liste[liste.length - 1] : null;
+
+                        // 1. Bandeau concis des points et plis réalisés sur la donne
+                        let recapMeneHtml = '';
+                        if (b) {
+                            recapMeneHtml = `
+                                <div style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 7px 12px; margin-bottom: 10px; font-size: 12px; display: flex; justify-content: space-around; align-items: center;">
+                                    <span>Points : <b>Vous ${b.pts_nous}</b> — <b>${b.pts_eux} Eux</b></span>
+                                    <span style="color:#555;">|</span>
+                                    <span>Plis : <b>${b.plis_nous}</b> — <b>${b.plis_eux}</b></span>
+                                    ${b.belote && b.belote !== 'Aucune' ? `<span style="color:#555;">|</span><span style="color:#ffd166;">📢 ${b.belote}</span>` : ''}
+                                </div>
+                            `;
+                        }
+
+                        // 2. Le tableau de la feuille de match officielle (sans répétition du total en bas)
+                        const tableHtml = `
+                            ${recapMeneHtml}
+                            <div style="max-height: 200px; overflow-y: auto; margin-bottom: 12px; border: 1px solid #333; border-radius: 8px;">
+                                <table style="width: 100%; font-size: 11px; border-collapse: collapse; text-align: center;">
+                                    <thead>
+                                        <tr style="background: #1f2530; color: #74c69d; border-bottom: 2px solid #74c69d;">
+                                            <th style="padding: 5px;">#</th>
+                                            <th style="padding: 5px;">Donneur</th>
+                                            <th style="padding: 5px;">Contrat</th>
+                                            <th style="padding: 5px; color: #ffd166; border-left: 1px solid #333;">NOUS</th>
+                                            <th style="padding: 5px; color: #ffd166;">Total</th>
+                                            <th style="padding: 5px; color: #e63946; border-left: 1px solid #333;">EUX</th>
+                                            <th style="padding: 5px; color: #e63946;">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${liste.map((row, idx) => {
+                                            const estDerniere = (idx === liste.length - 1);
+                                            const coincheBadge = row.coinche === 2 ? ' <span style="color:#e63946; font-weight:bold;">x3</span>' : (row.coinche === 1 ? ' <span style="color:#e63946; font-weight:bold;">x2</span>' : '');
+                                            const statutIcon = row.reussi ? '✅' : '❌';
+                                            const etoileNous = (row.etoile_capot === 0) ? '<span style="color:#ffd166; font-weight:bold;">★</span> ' : '';
+                                            const etoileEux  = (row.etoile_capot === 1) ? '<span style="color:#ffd166; font-weight:bold;">★</span> ' : '';
+                                            const highlight = estDerniere ? 'background: rgba(255, 209, 102, 0.15); font-weight: bold; border: 1.5px solid #ffd166;' : (idx % 2 === 0 ? 'background: rgba(255,255,255,0.02);' : '');
+
+                                            return `
+                                                <tr style="border-bottom: 1px solid #28303d; ${highlight}">
+                                                    <td style="padding: 5px; color: #888;">${row.donne}</td>
+                                                    <td style="padding: 5px;">${row.donneur}</td>
+                                                    <td style="padding: 5px;">${row.contrat} (${row.preneur})${coincheBadge} ${statutIcon}</td>
+                                                    <td style="padding: 5px; color: #74c69d; border-left: 1px solid #333;">${etoileNous}+${row.marque_nous}</td>
+                                                    <td style="padding: 5px; color: #ffd166;">${row.total_nous}</td>
+                                                    <td style="padding: 5px; color: #e76f51; border-left: 1px solid #333;">${etoileEux}+${row.marque_eux}</td>
+                                                    <td style="padding: 5px; color: #ffd166;">${row.total_eux}</td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+
+                        document.getElementById('modal-donne-summary').innerHTML = tableHtml;
                         document.getElementById('modal-donne').style.display = 'flex';
+
                     }
                 }
 
@@ -974,10 +1185,29 @@
                     afficherDetailPli(0);
                 }
 
+                // Si le match est terminé, on prépare le contenu du modal mais on ne l'affiche QUE sur clic du joueur !
                 if (etatJeu.match_termine && etatJeu.bilan_match) {
-                    document.getElementById('modal-donne').style.display = 'none';
                     const bm = etatJeu.bilan_match;
-                    document.getElementById('modal-match').style.display = 'flex';
+                    document.getElementById('match-header-icon').innerText = bm.victoire ? '🏆' : '💀';
+                    document.getElementById('match-title').innerText = bm.victoire ? 'VICTOIRE !' : 'DÉFAITE...';
+                    document.getElementById('match-title').style.color = bm.victoire ? '#74c69d' : '#e63946';
+
+                    document.getElementById('match-summary-content').innerHTML = `
+                        <div class="score-row total"><span>Score final :</span> <span>Vous ${bm.score_nous} — ${bm.score_eux} Eux</span></div>
+                        <div class="score-row"><span>Donnes jouées :</span> <b>${bm.donnes}</b></div>
+                        <div class="score-row"><span>Contrats (Vous) :</span> <b>${bm.contrats_nous}</b></div>
+                        <div class="score-row"><span>Contrats (Eux) :</span> <b>${bm.contrats_eux}</b></div>
+                        <hr style="border:0; border-top:1px solid #333; margin:6px 0;">
+                        <div class="score-row" style="color:#74c69d;"><span>Précision Enchères :</span> <b>${bm.precision_encheres}</b></div>
+                        <div class="score-row" style="color:#ffd166;"><span>Précision Carte :</span> <b>${bm.precision_carte}</b></div>
+                        <div class="score-row" style="color:#2ec4b6;"><span>Appréciation :</span> <b>${bm.mention}</b></div>
+                        <hr style="border:0; border-top:1px solid #333; margin:6px 0;">
+                        <div style="font-size:11px; color:#adb5bd; margin-bottom:4px; font-weight:bold;">🍀 BAROMÈTRE DE CHANCE :</div>
+                        <div class="score-row"><span>Jeux reçus (Distribution) :</span> <b>${bm.chance_distrib} (${bm.avis_chance})</b></div>
+                        <div class="score-row"><span>Coups du sort défavorables :</span> <b>${bm.bad_beats} donne(s)</b></div>
+                    `;
+                }
+
                     document.getElementById('match-header-icon').innerText = bm.victoire ? '🏆' : '💀';
                     document.getElementById('match-title').innerText = bm.victoire ? 'VICTOIRE !' : 'DÉFAITE...';
                     document.getElementById('match-title').style.color = bm.victoire ? '#74c69d' : '#e63946';
@@ -1489,16 +1719,24 @@
             await fetch('/api/rejouer_match', { method: 'POST' });
             nouvelleDonne();
         }
-
         async function validerAccueilEtLancer() {
             getAudioContext();
             const niveau = document.querySelector('input[name="radio-level"]:checked').value;
-            const repNiveau = await fetch('/api/changer_niveau_ia', {
+            const baremeRadio = document.querySelector('input[name="radio-bareme"]:checked');
+            const bareme = baremeRadio ? baremeRadio.value : 'contrat';
+
+            await fetch('/api/changer_niveau_ia', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ niveau })
             });
-            if (!repNiveau.ok) { alert("Le niveau n'a pas pu être changé (erreur " + repNiveau.status + ")."); }
+
+            await fetch('/api/changer_bareme', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bareme })
+            });
+
             document.getElementById('modal-welcome').style.display = 'none';
             nouvelleDonne();
         }

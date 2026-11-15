@@ -219,6 +219,37 @@ def simuler_esperance_options_tour(main_depart, encheres_avant, action_choisie, 
         if isinstance(d_p, tuple):
             dernier_contrat = (j_p, d_p[0], d_p[1])
 
+    # DÉTECTION SPÉCIALE : RÉPONSE À UNE COINCHE ADVERSE !
+    derniere_action_adverse = None
+    for j_p, d_p in reversed(encheres_avant):
+        if j_p % 2 != joueur_humain % 2:
+            derniere_action_adverse = d_p
+            break
+
+    en_reponse_coinche = (derniere_action_adverse == "coinche") and dernier_contrat and (dernier_contrat[0] % 2 == joueur_humain % 2)
+
+    if en_reponse_coinche:
+        # Seules 2 options légales existent sur terre : Passe ou Surcoinche !
+        options = ["passe", "surcoinche"]
+        preneur_actuel, val_actuelle, coul_actuelle = dernier_contrat
+        bilan = {}
+        # Évaluation directe des 2 options
+        for opt in options:
+            mult = 3 if opt == "surcoinche" else 2
+            c_test = {"valeur": val_actuelle, "atout": coul_actuelle, "joueur": preneur_actuel, "coinche": mult - 1, "capot": False}
+            lbl = f"Surcoinche ({val_actuelle} {coul_actuelle} x3)" if opt == "surcoinche" else f"Passe ({val_actuelle} {coul_actuelle} x2)"
+            
+            gains = []
+            mains_sims = [imaginer_v3(main_depart, joueur_humain, [], list(encheres_avant), coul_actuelle, regles) for _ in range(nb_simuls)]
+            for m in mains_sims:
+                pts_t, pl_t = _PROF_BOT.simuler_avec_ia_v2(m, [], coul_actuelle, c_test, joueur_humain, m[joueur_humain][0], regles)
+                bel = belote_imaginee(m, [], coul_actuelle)
+                reussi = contrat_reussi(c_test, pts_t[preneur_actuel % 2], pl_t[preneur_actuel % 2], bel == (preneur_actuel % 2), regles)
+                gain = (val_actuelle * mult) if reussi else (-val_actuelle * mult)
+                gains.append(gain)
+            bilan[lbl] = round(float(np.mean(gains)), 1)
+        return bilan
+
     # 2. Identifier les couleurs annoncées par les adversaires
     couleurs_adverses = {
         act[1] for j_p, act in encheres_avant
@@ -352,18 +383,19 @@ def force_defensive_coinche(main, atout):
 
 
 def analyser_encheres_humain(main_depart, encheres_partie, joueur_humain=0):
-    """Analyse complète tour par tour : Espérances chiffrées + Doctrine Système v2."""
+    """Analyse complète tour par tour : Espérances chiffrées + Doctrine Système v2 + Notes."""
     commentaires = []
     actions_humain = [(idx, d) for idx, (j, d) in enumerate(encheres_partie) if j == joueur_humain]
     if not actions_humain:
-        return ["ℹ️ Aucune action enregistrée pour le joueur Sud."]
+        return ["📍 Aucune action enregistrée pour le joueur Sud."], []
 
     sys_v2 = SysV2()
+    notes_actions = []
 
     for tour_num, (idx_action, action) in enumerate(actions_humain, 1):
         encheres_avant = encheres_partie[:idx_action]
         action_nom = f"{action[0]} {action[1]}" if isinstance(action, tuple) else str(action).upper()
-        
+
         dernier_c = None
         for j_prec, act_prec in encheres_avant:
             if isinstance(act_prec, tuple):
@@ -377,71 +409,101 @@ def analyser_encheres_humain(main_depart, encheres_partie, joueur_humain=0):
 
         commentaires.append(f"📍 **Tour {tour_num} : Vous avez choisi [{action_nom}]**")
 
-        # 1. TABLEAU COMPARATIF DES ESPÉRANCES CHIFFRÉES (Monte Carlo)
+        # Détection : est-ce une réponse à une coinche adverse ?
+        derniere_action_adv = None
+        for j_p, d_p in reversed(encheres_avant):
+            if j_p % 2 != joueur_humain % 2:
+                derniere_action_adv = d_p
+                break
+        en_reponse_coinche = (derniere_action_adv == "coinche") and dernier_c and (dernier_c["joueur"] % 2 == joueur_humain % 2)
+
+        # 1. CAS PARTICULIER : RÉPONSE À UNE COINCHE (seules options : Passe ou Surcoinche)
+        if en_reponse_coinche:
+            val_c = dernier_c["valeur"]
+            coul_c = dernier_c["atout"]
+            # Simulation rapide des 2 seules options
+            mult_sur = 3
+            mult_passe = 2
+            # Le Passe est le choix de bon sens sauf jeu exceptionnel
+            if action == "surcoinche":
+                commentaires.append(f"  • 💣 *Surcoinche* : Vous avez triplé la mise sur {val_c} {coul_c} !")
+                note_tour = 0.8
+            else:
+                commentaires.append(f"  • ✋ *Passe de sécurité* : Vous acceptez le contrat coinché (x2) sans risquer de tripler.")
+                note_tour = 1.0
+            notes_actions.append(note_tour)
+            if tour_num < len(actions_humain):
+                commentaires.append("---")
+            continue
+
+        # 2. CAS NORMAL : ENCHÈRES CLASSIQUES
+        meilleure_opt = None
+        bilan_tour = None
         try:
             bilan_tour = simuler_esperance_options_tour(main_depart, encheres_avant, action, joueur_humain)
             if bilan_tour:
                 meilleure_opt = max(bilan_tour, key=bilan_tour.get)
-                # Trier les options par espérance décroissante
                 tries = sorted(bilan_tour.items(), key=lambda x: x[1], reverse=True)
-                # Garder le top 2 ou 3, en s'assurant d'inclure le choix du joueur s'il est plus bas
                 top_opts = dict(tries[:3])
                 for opt_lbl, esp in bilan_tour.items():
                     if action_nom in opt_lbl and opt_lbl not in top_opts:
                         top_opts[opt_lbl] = esp
-
                 commentaires.append("  *Espérances comparées (meilleures options) :*")
                 for opt_lbl, esp in sorted(top_opts.items(), key=lambda x: x[1], reverse=True):
                     etoile = " 🌟 (Optimal)" if opt_lbl == meilleure_opt else ""
                     signe = "+" if esp > 0 else ""
                     commentaires.append(f"    • {opt_lbl} : **{signe}{esp} pts**{etoile}")
-        except Exception as e:
+        except Exception:
             pass
 
-        # 2. CONSEIL DOCTRINAL SYSTÈME V2 (AVEC LES 4 CRITÈRES OBJECTIFS)
+        # Conseil doctrinal Système v2
         sys_v2.encheres = list(encheres_avant)
         decision_recommandee = sys_v2.annoncer(main_depart, joueur_humain, dernier_c, REGLES_STANDARD)
         nom_reco = f"{decision_recommandee[0]} {decision_recommandee[1]}" if isinstance(decision_recommandee, tuple) else str(decision_recommandee).upper()
 
-        # Détection immédiate d'une annonce dans la couleur adverse
         couleurs_adv_tour = {
             act[1] for j_p, act in encheres_avant
             if isinstance(act, tuple) and (j_p % 2 != joueur_humain % 2)
         }
         annonce_adverse = isinstance(action, tuple) and (action[1] in couleurs_adv_tour)
-
         action_est_optimale = bool(bilan_tour and meilleure_opt and (action_nom.lower() in meilleure_opt.lower()))
 
-        # Priorité 1 : Si l'humain a joué la couleur adverse, on le sanctionne doctrinalement !
+        note_tour = 0.6
         if annonce_adverse:
-            commentaires.append(f"  • ⚠️ *Faute de doctrine* : Vous avez surenchéri à **{action_nom}** dans une couleur annoncée par l'adversaire ! Sauf cas rarissime, on ne dispute jamais le contrat à l'atout de l'ennemi.")
+            commentaires.append(f"  • ⚠️ *Faute de doctrine* : Vous avez surenchéri à **{action_nom}** dans une couleur annoncée par l'adversaire !")
             commentaires.append(f"  • *Recommandation Système v2* : Le système conseillait **{nom_reco}**.")
-        # Priorité 2 : Choix conforme ou jugé optimal par la simulation
+            note_tour = 0.0
         elif action == decision_recommandee or action_est_optimale:
             if action == decision_recommandee:
-                commentaires.append(f"  • *Système officiel* : Votre décision **{action_nom}** est 100 % conforme aux critères du Système v2.")
+                commentaires.append(f"  • *Système officiel* : Votre décision **{action_nom}** est 100 % conforme au Système v2.")
             else:
-                commentaires.append(f"  • *Décision tactique validée* : Même si la grille théorique envisageait {nom_reco}, votre choix **{action_nom}** maximise l'espérance réelle à la table.")
-        # Priorité 3 : Divergence classique
+                commentaires.append(f"  • *Décision tactique validée* : Votre choix **{action_nom}** maximise l'espérance réelle.")
+            note_tour = 1.0
         else:
-            action_verbe = "d'ouvrir" if not dernier_c else "de surenchérir"
             commentaires.append(f"  • *Recommandation Système v2* : Le système conseillait **{nom_reco}**.")
             if action != "passe" and decision_recommandee == "passe":
-                commentaires.append(f"    -> *Prise de risque* : Surenchérir à {action_nom} est dangereux sans critères de sécurité (il faut soit 5 atouts, soit 4 avec chicane, soit la Belote R-D en main, soit le soutien du partenaire).")
+                commentaires.append(f"    -> *Prise de risque* : Surenchérir à {action_nom} manque de critères de sécurité.")
+                note_tour = 0.4
             elif action == "passe" and decision_recommandee != "passe":
-                commentaires.append(f"    -> *Occasion manquée* : Votre jeu remplissait les critères de sécurité pour disputer le contrat à {nom_reco}.")
+                commentaires.append(f"    -> *Occasion manquée* : Votre jeu permettait de disputer à {nom_reco}.")
+                note_tour = 0.5
 
-        # 3. CONSEIL COINCHE SI CONTRAT ADVERSE
+        # Coinche défensive
         if dernier_c and (dernier_c["joueur"] % 2 != joueur_humain % 2):
             force = force_defensive_coinche(main_depart, dernier_c["atout"])
             val = dernier_c["valeur"]
             seuil_reco = max(1, 4 - (val - 80) // 20)
             if force >= seuil_reco and action != "coinche":
-                commentaires.append(f"  • 💡 *Coinche manquée* : Force défensive de {force} (seuil: {seuil_reco}). Coincher rapportait gros !")
+                commentaires.append(f"  • 💡 *Coinche manquée* : Force de {force} (seuil: {seuil_reco}). Coincher rapportait gros !")
+                note_tour = min(note_tour, 0.3)
             elif action == "coinche" and force < seuil_reco:
-                commentaires.append(f"  • ⚠️ *Coinche téméraire* : Force d'atout ({force}) trop faible (seuil: {seuil_reco}). Danger de réussite adverse.")
+                commentaires.append(f"  • ⚠️ *Coinche téméraire* : Force ({force}) trop faible (seuil: {seuil_reco}).")
+                note_tour = 0.2
 
+        notes_actions.append(note_tour)
         if tour_num < len(actions_humain):
             commentaires.append("---")
 
-    return commentaires
+    return commentaires, notes_actions
+
+
