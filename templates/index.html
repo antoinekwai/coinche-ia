@@ -640,7 +640,7 @@
                 osc.stop(ctx.currentTime + 0.06);
             } catch(e) {}
         }
-        
+
         function ouvrirBilanMatchDepuisDonne() {
             document.getElementById('modal-donne').style.display = 'none';
             document.getElementById('modal-match').style.display = 'flex';
@@ -1208,28 +1208,8 @@
                     `;
                 }
 
-                    document.getElementById('match-header-icon').innerText = bm.victoire ? '🏆' : '💀';
-                    document.getElementById('match-title').innerText = bm.victoire ? 'VICTOIRE !' : 'DÉFAITE...';
-                    document.getElementById('match-title').style.color = bm.victoire ? '#74c69d' : '#e63946';
-
-                    document.getElementById('match-summary-content').innerHTML = `
-                        <div class="score-row total"><span>Score final :</span> <span>Vous ${bm.score_nous} — ${bm.score_eux} Eux</span></div>
-                        <div class="score-row"><span>Donnes jouées :</span> <b>${bm.donnes}</b></div>
-                        <div class="score-row"><span>Contrats (Vous) :</span> <b>${bm.contrats_nous}</b></div>
-                        <div class="score-row"><span>Contrats (Eux) :</span> <b>${bm.contrats_eux}</b></div>
-                        <hr style="border:0; border-top:1px solid #333; margin:6px 0;">
-                        <div class="score-row" style="color:#74c69d;"><span>Précision Enchères :</span> <b>${bm.precision_encheres} %</b></div>
-                        <div class="score-row" style="color:#ffd166;"><span>Précision Carte :</span> <b>${bm.precision_carte} %</b></div>
-                        <div class="score-row" style="color:#2ec4b6;"><span>Appréciation :</span> <b>${bm.mention}</b></div>
-                        <hr style="border:0; border-top:1px solid #333; margin:6px 0;">
-                        <div style="font-size:11px; color:#adb5bd; margin-bottom:4px; font-weight:bold;">🍀 BAROMÈTRE DE CHANCE :</div>
-                        <div class="score-row"><span>Jeux reçus (Distribution) :</span> <b>${bm.chance_distrib} (${bm.avis_chance})</b></div>
-                        <div class="score-row"><span>Coups du sort défavorables :</span> <b>${bm.bad_beats} donne(s)</b></div>
-                    `;
-
-                }
-
             } else {
+
                 // PENDANT LA PARTIE : MASQUER COMPLÈTEMENT LE PROFESSEUR
                 document.getElementById('professor-panel').style.display = 'none';
                 replayBar.style.display = 'none';
