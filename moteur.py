@@ -68,6 +68,24 @@ def equipe_belote(mains, atout):
             return joueur % 2
     return None
 
+def arrondir_points_ffb(points_attaque, points_defense, der_attaque):
+    """
+    Arrondi officiel FFB à la dizaine la plus proche sur un total de 162 points.
+    La somme finale des deux camps arrondis vaut TOUJOURS exactement 160.
+    En cas de terminaison par 5, le camp ayant fait le Dix de Der bénéficie de l'arrondi supérieur.
+    """
+    u_att = points_attaque % 10
+    
+    if u_att in (1, 2, 3, 4):
+        att_arrondi = (points_attaque // 10) * 10
+    elif u_att in (6, 7, 8, 9):
+        att_arrondi = ((points_attaque // 10) + 1) * 10
+    else:  # se termine par 5
+        att_arrondi = ((points_attaque // 10) + 1) * 10 if der_attaque else (points_attaque // 10) * 10
+        
+    def_arrondi = 160 - att_arrondi
+    return att_arrondi, def_arrondi
+
 
 def decompte(contrat, points_cartes, plis, belote, regles):
     attaque = contrat["joueur"] % 2
@@ -86,25 +104,57 @@ def decompte(contrat, points_cartes, plis, belote, regles):
     valeur = contrat["valeur"]
     if not contrat["capot"] and capot_realise and regles["capot_non_annonce"]:
         valeur = max(valeur, regles["valeur_capot"])
-    valeur *= multi
 
     scores = [0, 0]
-    if regles["mode_score"] == "contrat":
+
+    # MODE 1 : BARÈME STANDARD ("Contrat sec / Tout ou rien")
+    if regles.get("mode_score") == "contrat":
+        valeur_totale = valeur * multi
         if reussi:
-            scores[attaque] += valeur
+            scores[attaque] += valeur_totale
         else:
             chute = regles.get("valeur_chute")
             if chute is not None and not contrat["capot"]:
                 scores[defense] += max(chute, contrat["valeur"]) * multi
             else:
-                scores[defense] += valeur
+                scores[defense] += valeur_totale
+        if belote is not None and regles.get("belote_au_score"):
+            scores[belote] += regles["points_belote"]
 
-    elif reussi:
-        scores[attaque] += valeur + points_cartes[attaque]
-        scores[defense] += points_cartes[defense]
+    # MODE 2 : BARÈME OFFICIEL FFB ("Points faits arrondis + Contrat")
     else:
-        scores[defense] += valeur + sum(points_cartes)
+        # En FFB, le der décide de l'arrondi en cas de 5
+        # Le dernier pli détermine qui a fait le 10 de der
+        der_attaque = (plis[attaque] > 0 and capot_realise) or (points_cartes[attaque] % 10 in (2, 7) if regles.get("dix_de_der") == 10 else True)
+        
+        # Arrondi officiel FFB à la dizaine (somme = 160)
+        pts_att_arrondi, pts_def_arrondi = arrondir_points_ffb(points_cartes[attaque], points_cartes[defense], der_attaque)
+        pts_belote = regles.get("points_belote", 20) if belote is not None else 0
 
-    if belote is not None and regles["belote_au_score"]:
-        scores[belote] += regles["points_belote"]
+        if reussi:
+            if contrat.get("coinche", 0) > 0:
+                # Contrat coinché réussi : l'attaque empoche (arrondi + contrat) doublé/triplé
+                scores[attaque] += (valeur + pts_att_arrondi) * multi
+                if belote == attaque:
+                    scores[attaque] += pts_belote
+                scores[defense] = 0
+            else:
+                # Contrat normal réussi : chacun marque ses points faits arrondis, l'attaque ajoute le contrat
+                scores[attaque] += valeur + pts_att_arrondi
+                scores[defense] += pts_def_arrondi
+                if belote == attaque:
+                    scores[attaque] += pts_belote
+                elif belote == defense:
+                    scores[defense] += pts_belote
+        else:
+            # Chute : la défense empoche 160 + le contrat, multiplié si coinché
+            total_chute = (160 + valeur) * multi
+            scores[defense] += total_chute
+            if belote is not None:
+                # La belote reste acquise au camp qui la possède
+                scores[belote] += pts_belote
+            scores[attaque] = 0
+
+
     return scores, reussi
+
