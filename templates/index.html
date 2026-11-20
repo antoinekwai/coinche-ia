@@ -636,7 +636,8 @@
             <span>Pli <b id="replay-num">1</b>/8</span>
             <button onclick="changerPliReplay(-1)">◀</button>
             <button onclick="changerPliReplay(1)">▶</button>
-            <button style="background:#495057;" onclick="quitterReplay()">✕ Fermer</button>
+            <button style="background:#e63946; color:#fff;" onclick="quitterReplay()">✕ Quitter l'analyse</button>
+
         </div>
 
         <!-- NORD (Partenaire) -->
@@ -715,11 +716,9 @@
                 <button id="btn-export" onclick="exporterDonne()" style="background:#2a313b; color:#74c69d; border:1px solid #74c69d; padding:4px 8px; font-size:11px; border-radius:6px; cursor:pointer;">
                     📋 Exporter
                 </button>
-                <button onclick="fermerPanneauProfesseur()" style="background:#495057; color:#fff; border:none; padding:4px 8px; font-size:11px; border-radius:6px; cursor:pointer;">
-                    ✕ Fermer
-                </button>
             </div>
         </div>
+
         
         <div id="section-score-donne">
             <h3>Bilan de la donne</h3>
@@ -787,77 +786,60 @@
             return audioCtx;
         }
 
-                // Bruitage de base (utilisé par la distribution et les bots)
-        function playCardSound() {
-            playCardSoftSound();
-        }
+        // ====================================================================
+        // VRAIS BRUITAGES DE CARTES STUDIO (Stockés en local — Latence 0 ms)
+        // ====================================================================
+        const AUDIO_CARD_SOFT = new Audio("/static/sounds/card_place.mp3");
+        const AUDIO_CARD_SLAP = new Audio("/static/sounds/card_slap.mp3");
+        const AUDIO_CARD_FAN  = new Audio("/static/sounds/card_fan.mp3");
 
+        AUDIO_CARD_SOFT.volume = 0.55;
+        AUDIO_CARD_SLAP.volume = 0.75;
+        AUDIO_CARD_FAN.volume  = 0.40;
 
-               // 1. Pose feutrée standard (petite carte)
-        function playCardSoftSound() {
+        function playSoundSafe(audioObj) {
             try {
-                const ctx = getAudioContext();
-                if (ctx.state === 'suspended') ctx.resume();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(170, ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(35, ctx.currentTime + 0.05);
-
-                gain.gain.setValueAtTime(0.28, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
-
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.start();
-                osc.stop(ctx.currentTime + 0.05);
+                audioObj.currentTime = 0;
+                const p = audioObj.play();
+                if (p !== undefined) p.catch(() => {});
             } catch(e) {}
         }
 
-        // 2. Claquement sec et autoritaire (As, Valet, 10, carte maîtresse)
-        function playCardSlapSound() {
-            try {
-                const ctx = getAudioContext();
-                if (ctx.state === 'suspended') ctx.resume();
+        // 1. Pose feutrée standard (vrai bruit de carte posée)
+        function playCardSoftSound() { playSoundSafe(AUDIO_CARD_SOFT); }
 
-                // Clic sec d'impact
-                const osc1 = ctx.createOscillator();
-                const gain1 = ctx.createGain();
-                osc1.type = 'sine';
-                osc1.frequency.setValueAtTime(540, ctx.currentTime);
-                osc1.frequency.exponentialRampToValueAtTime(90, ctx.currentTime + 0.06);
-                gain1.gain.setValueAtTime(0.40, ctx.currentTime);
-                gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+        // 2. Claquement sec (vrai bruit de carte abattue avec conviction)
+        function playCardSlapSound() { playSoundSafe(AUDIO_CARD_SLAP); }
 
-                // Résonance feutrée du tapis
-                const osc2 = ctx.createOscillator();
-                const gain2 = ctx.createGain();
-                osc2.type = 'triangle';
-                osc2.frequency.setValueAtTime(130, ctx.currentTime);
-                osc2.frequency.exponentialRampToValueAtTime(25, ctx.currentTime + 0.08);
-                gain2.gain.setValueAtTime(0.35, ctx.currentTime);
-                gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+        // 3. Glissement / Distribution (remplace l'ancienne playDealSwooshSound)
+        function playDealSwooshSound() { playSoundSafe(AUDIO_CARD_FAN); }
 
-                osc1.connect(gain1); gain1.connect(ctx.destination);
-                osc2.connect(gain2); gain2.connect(ctx.destination);
-                osc1.start(); osc2.start();
-                osc1.stop(ctx.currentTime + 0.06);
-                osc2.stop(ctx.currentTime + 0.08);
-            } catch(e) {}
-        }
+        // Alias pour les bots et la distribution
+        function playCardSound() { playCardSoftSound(); }
 
-        // Détection automatique : petite carte vs grosse carte claquée
+        // Détection intelligente : claque UNIQUEMENT si la carte est maîtresse sur table !
         function playCardSoundFor(rang, couleur) {
             const atout = (etatJeu && etatJeu.contrat) ? etatJeu.contrat.atout : null;
-            const estMaitre = (rang === 'A' || rang === '10' || (rang === 'V' && couleur === atout) || (rang === '9' && couleur === atout));
-            if (estMaitre) {
+            const pli = (etatJeu && etatJeu.pli_en_cours) ? etatJeu.pli_en_cours : [];
+            
+            const estMajeure = (rang === 'A' || (rang === 'V' && couleur === atout) || (rang === '9' && couleur === atout));
+            
+            // Entame d'un honneur majeur -> SLAP !
+            if (pli.length === 0 && estMajeure) {
+                playCardSlapSound();
+                return;
+            }
+
+            // Si le pli a déjà commencé : on ne claque QUE si c'est un atout ou si on fournit la couleur
+            // Un 10 défaussé ou sacrifié sur pli perdu fait un son feutré doux !
+            if (estMajeure && (couleur === atout || (pli.length > 0 && pli[0][1].slice(-1) === couleur))) {
                 playCardSlapSound();
             } else {
                 playCardSoftSound();
             }
         }
 
-        // 3. Impact lourd et dramatique pour Coinche et Surcoinche (Gong de table)
+        // 4. Impact lourd et dramatique pour Coinche et Surcoinche (Gong de table)
         function playCoincheImpactSound(isSurcoinche=false) {
             try {
                 const ctx = getAudioContext();
@@ -880,31 +862,10 @@
             } catch(e) {}
         }
 
+        // TRANSITION FIN DE MATCH (BIEN CONSERVÉE !)
         function ouvrirBilanMatchDepuisDonne() {
             document.getElementById('modal-donne').style.display = 'none';
             document.getElementById('modal-match').style.display = 'flex';
-        }
-
-        // Son de froissement / volée de distribution
-        function playDealSwooshSound() {
-            try {
-                const ctx = getAudioContext();
-                if (ctx.state === 'suspended') ctx.resume();
-
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(320, ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 0.12);
-
-                gain.gain.setValueAtTime(0.18, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
-
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.start();
-                osc.stop(ctx.currentTime + 0.12);
-            } catch(e) {}
         }
 
         function ouvrirFeuilleMarque() {
@@ -1055,6 +1016,7 @@
 
             document.getElementById('score-nous').innerText = etatJeu.scores[0];
             document.getElementById('score-eux').innerText = etatJeu.scores[1];
+            document.getElementById('score-obj').innerText = etatJeu.score_objectif || 1000;
             document.getElementById('info-message').innerText = etatJeu.message;
 
             // Donneur (D)
@@ -1691,6 +1653,7 @@
             dernierPliCle = "";
             document.body.classList.remove('mode-replay');
             document.getElementById('replay-bar').style.display = 'none';
+            document.getElementById('professor-panel').style.display = 'none';
             actualiser();
         }
 

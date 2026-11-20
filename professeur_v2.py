@@ -503,6 +503,22 @@ def analyser_encheres_humain(main_depart, encheres_partie, joueur_humain=0):
         notes_actions.append(note_tour)
         if tour_num < len(actions_humain):
             commentaires.append("---")
+            
+        # 4. CONSEIL DE MATCH PLAY (GESTION DU SCORE DE LA PARTIE)
+        obj_match = 1500 if bareme == "ffb" else 1000
+        manque_nous = obj_match - score_nous
+        avance_nous = score_nous - score_eux
+        retard_nous = score_eux - score_nous
+
+        # Cas A : Passager Clandestin en FFB
+        if bareme == "ffb" and manque_nous <= 60 and avance_nous >= 130 and action == "passe":
+            commentaires.append("  • 🛡️ *Stratégie de Match Play (Passager Clandestin)* : Vous êtes à moins de 60 points du but avec une belle avance. Passer est le choix parfait : les points de défense suffisent pour clore le match !")
+        # Cas B : Plafond d'arrivée
+        elif manque_nous <= 80 and isinstance(action, tuple) and action[0] == 80:
+            commentaires.append("  • 🏁 *Stratégie de Match Play (Ligne d'arrivée)* : Bien joué ! Plafonner votre annonce à 80 assure la victoire sans prendre de risque de chute inutile.")
+        # Cas C : All-in du désespoir
+        elif (obj_match - score_eux) <= 80 and retard_nous >= 350 and action == "coinche":
+            commentaires.append("  • 💣 *Stratégie de Match Play (All-In)* : L'adversaire est sur le point de plier le match. Coincher agressivement était votre unique chance mathématique de survie !")
 
     return commentaires, notes_actions
 

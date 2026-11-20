@@ -443,7 +443,13 @@ def cloturer_donne(partie, session_data):
     partie["message"] = f"Donne terminée ! Contrat {c_str} {partie['contrat']['atout']} {statut}. Points : {partie['pts_cartes'][0]} à {partie['pts_cartes'][1]}."
 
     try:
-        comms, notes_ench = analyser_encheres_humain(partie["main_initiale_humain"], partie["encheres"], 0)
+        bareme_actuel = session_data.get("bareme", "contrat")
+        comms, notes_ench = analyser_encheres_humain(
+            partie["main_initiale_humain"], partie["encheres"], 0,
+            score_nous=partie["scores"][0], score_eux=partie["scores"][1],
+            bareme=bareme_actuel
+        )
+
         partie["debrief_encheres"] = comms
         for n in notes_ench:
             sm["total_encheres_humain"] = sm.get("total_encheres_humain", 0) + 1
@@ -489,9 +495,13 @@ def cloturer_donne(partie, session_data):
     except Exception as e:
         print(f"Avertissement calcul chance: {e}")
 
-    obj = regles["score_objectif"]
+    # Objectif dynamique : 1 500 pts en FFB officiel, 1 000 pts en Standard
+    bareme = session_data.get("bareme", "contrat")
+    obj = 1500 if bareme == "ffb" else 1000
+
     if max(partie["scores"]) >= obj and partie["scores"][0] != partie["scores"][1]:
         partie["match_termine"] = True
+
         victoire = (partie["scores"][0] > partie["scores"][1])
         prec_carte = round(100.0 * sm.get("coups_parfaits_humain", 0.0) / max(1, sm.get("total_coups_humain", 0)), 1)
         tot_ench = sm.get("total_encheres_humain", 0)
@@ -561,10 +571,14 @@ def get_etat():
         })
 
     atout_tri = partie["contrat"]["atout"] if (partie["contrat"] and partie["etat"] != "annonces") else None
+    bareme = data.get("bareme", "contrat")
+    obj = 1500 if bareme == "ffb" else 1000
+
     return jsonify({
         "etat": partie["etat"],
         "donneur": partie["donneur"],
         "scores": partie["scores"],
+        "score_objectif": obj,
         "main_humain": trier_main(partie["mains"][0], atout_tri),
         "main_brute_tirage": list(partie["main_initiale_humain"]),
         "mains_depart_toutes": [[f"{r}{c}" for r, c in trier_main(m)] for m in partie["mains_initiales_toutes"]],
